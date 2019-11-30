@@ -93,7 +93,7 @@ def list_dir(user, path):
     return listed
 
 
-class ClientListener(Thread):
+class clientListener(Thread):
     def __init__(self, sock: socket.socket):
         super().__init__(daemon=True)
         self.sock = sock
@@ -109,7 +109,38 @@ class ClientListener(Thread):
         name, command = [i for i in self.sock.recv(2048).decode('utf-8').split('\n')]
         print(name, command)
         self.name = name
-        init(name)
+
+        if command == 'init':
+            init(name)
+
+
+        elif command == 'c':
+            pass
+
+        elif command == 'r':
+            pass
+
+        elif command == 'w':
+            pass
+
+        elif command == 'di':
+            pass
+
+        elif command == 'i':
+            pass
+
+        elif command == 'cp':
+            pass
+
+        elif command == 'mw':
+            pass
+
+        elif command == 'lc':
+            pass
+
+        elif command == 'md':
+            pass
+
         # welcome_user(self.addr[0], self.addr[1], self.name)
         # print("Hi, %s!" % self.name)
         # TODO all command receiving should be here

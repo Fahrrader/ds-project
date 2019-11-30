@@ -84,6 +84,7 @@ if __name__ == "__main__":
         elif c == 'init':
             init()
             print("Initialized a new system.")
+
         elif c == 'c':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
@@ -128,4 +129,3 @@ if __name__ == "__main__":
 
         else:
             print("Unrecognized. Try 'help' if in doubt.")
-
