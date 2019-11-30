@@ -1,6 +1,9 @@
 import socket
+import string
 import xml.etree.ElementTree as ET
 from threading import Thread
+from random import choices
+import time
 
 
 def create_root():
@@ -108,7 +111,37 @@ def init(user):
     return '1'
 
 
-# def create_file(user, path):
+def create_file(user, path):
+    file, node = get_file(user, path)
+    if node is None:
+        return '0'
+    if file is not None:
+        return '2'
+
+    elements = ['']
+    while elements:
+        new_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
+        elements = root.findall('.//*[@id="%s"]' % new_id)
+    # TODO
+    """cut_path, file_name = get_last_node_split(path)
+    file = ET.SubElement(node, tag='f', attrib={
+        'id': new_id,
+        'name': file_name,
+        'size': 0,  # something
+        'created': time,
+        'modified': time
+    })    """
+    return '1'
+
+
+def get_file_info(user, path):
+    file, node = get_file(user, path)
+    if node is None:
+        return '0'
+    if file is None:
+        return '2'
+    print(file.attrib)
+    return '1'
 
 
 class ClientListener(Thread):
@@ -135,7 +168,7 @@ class ClientListener(Thread):
         if command == 'init':
             res = init(name)
         elif command == 'c':
-            pass
+            res = create_file(name, args[2])
         elif command == 'r':
             pass
 
@@ -146,8 +179,7 @@ class ClientListener(Thread):
             pass
 
         elif command == 'i':
-            pass
-
+            res = get_file_info(name, args[2])
         elif command == 'cp':
             pass
 

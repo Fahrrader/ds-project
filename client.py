@@ -190,7 +190,7 @@ if __name__ == "__main__":
                 """"
                 name
                 size 
-                type 
+                -type 
                 location
                 created 
                 modified
