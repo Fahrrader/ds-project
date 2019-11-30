@@ -133,10 +133,9 @@ if __name__ == "__main__":
             storage_port = ack[1]
             ack  = recv_storage(['r', current_dir + '/%s' % args[0]])
             if ack == '1':
-                f = open(args[0])
-                #TODO собственно читать файл
+                webbrowser.open(args[0])
             else:
-                print("Some error has occured.")
+                print("Some error has occurred.")
 
 
 
@@ -152,7 +151,7 @@ if __name__ == "__main__":
             if ack == '1':
                 print("The file has been successfully writen.")
             else:
-                print("Some error has occured.")
+                print("Some error has occurred.")
 
 
         elif c == 'd':
@@ -164,15 +163,44 @@ if __name__ == "__main__":
             elif ack == 2:
                 print('There is no such file or directory in the current directory.')
             else:
-                print("Some error has occured.")
+                print("Some error has occurred.")
 
         elif c == 'i':
             if error_arg_len(expected_len=1):
                 continue
+            ack = send_recv_name_server([user, 'r', current_dir + '/%s' % args[0]])
+            storage_ip = ack[0]
+            storage_port = ack[1]
+            result =  recv_storage(['r', current_dir + '/%s' % args[0]], storage_ip, storage_port)
+            if len(result) == 1:
+                print("An error has occurred.")
+            else:
+                """"
+                name
+                size 
+                type 
+                location
+                created 
+                modified
+                """""
+
+                print("Here is the information about the file:")
+                print('name: %s' %result[0])
+                print('size: %s bytes' %result[1])
+                print('location: %s' % result[3])
+                print('created: %s' % result[4])
+                print('modifies: %s' % result[5])
 
         elif c == 'cp':
             if error_arg_len(expected_len=2) or error_forbidden_symbols(args[1]):
                 continue
+            ack = send_recv_name_server([user, 'c', current_dir + '/%s' % args[0], args[1]])
+            if ack == "1":
+                print('The file %s has been successfully copied.' % args[0])
+            elif ack == "2":
+                print('File %s already exists in this directory.' % args[0])
+            elif ack == "0":
+                print('Error while creating a new file.')
 
         elif c == 'mv':
             if error_arg_len(expected_len=2):
