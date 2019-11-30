@@ -7,7 +7,7 @@ def show_help():
     print('init         -- to initialize a new repository with this IP address.')
     print('c [filename] -- create an empty file in your directory.')
     print('r [filename] -- store and open a file from your directory.')  # TODO if read multiple times, replace local
-    print('w [filename] -- send a file from your computer to the directory with replacing the old one.')
+    print('w [filename] -- send_recv_ack a file from your computer to the directory with replacing the old one.')
     print('d [filename] -- delete a file from your directory.')
     print('i [filename] -- display information about a file in your directory.')
     print('cp [filename] [path] -- store a copy of a file in the new path.')
@@ -37,19 +37,21 @@ def error_arg_len(expected_len):
         return True
 
 
-def connect():
+def connect_name_server():
     sock.connect((server_ip, port))
-    # sock.send(str.encode(user, 'utf-8'))
+    # sock.send_recv_ack(str.encode(user, 'utf-8'))
     # print("Connection established.")  # test
 
+def connect_storage(storage_ip, port):
+    sock.connect((storage_ip, port))
 
 def close():
     # sock.shutdown(how=socket.SHUT_RDWR)
     sock.close()
 
 
-def send(args):
-    connect()
+def send_recv_ack(args):
+    connect_name_server()
     sock.sendall(str.encode("\n".join(args)))
     ack = sock.recv(1024).decode('utf-8')
     close()
@@ -66,7 +68,7 @@ if __name__ == "__main__":
     server_ip = 'localhost'  # TODO
     port = 8800
     sock = socket.socket()
-    # connect()  # test
+    # connect_name_server()  # test
 
     current_dir = ""
     while True:
@@ -83,14 +85,26 @@ if __name__ == "__main__":
             break
 
         elif c == 'init':
-            ack = send([user, 'init'])
+            ack = send_recv_ack([user, 'init'])
             if ack == 0:
                 print("Initialized a new system.")
             else:
-                print("Error while initializing a new system.")
+                print("Error while initializing the new system.")
+
         elif c == 'c':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
+            ack = send_recv_ack([user, 'c', current_dir + '/%s' %args[0]])
+            # 0 - everything is ok
+            # 1 - file already exist
+            # -1 - error
+            if ack == 0:
+                print('A new file %s has been successfully created.' %args[0])
+            elif ack == 1:
+                print('File %s already exists in this directory.' %args[0])
+            elif ack == -1:
+                print('Error while creating a new file.')
+
 
         elif c == 'r':
             if error_arg_len(expected_len=1):
@@ -103,6 +117,13 @@ if __name__ == "__main__":
         elif c == 'd':
             if error_arg_len(expected_len=1):
                 continue
+            ack = send_recv_ack([user, 'd', current_dir + '/%s' %args[0]])
+            if ack == 0:
+                print('The operation has been successfully done.')
+            elif ack == 1:
+                print('There is no such file or directory in the current directory.')
+            elif ack == -1:
+                print('Error while deleting.')
 
         elif c == 'i':
             if error_arg_len(expected_len=1):
@@ -122,13 +143,13 @@ if __name__ == "__main__":
             # TODO set current_dir to new after all
             # current_dir = current_dir + '\\' + args[0]  # path.join(current_dir, args[0])
         elif c == 'ls':
-            if error_arg_len(expected_len=1):
-                continue
+            pass
 
         elif c == 'md':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
             # TODO put restrictions on names (\|/"*':<>) and empty
+
 
         else:
             print("Unrecognized. Try 'help' if in doubt.")
