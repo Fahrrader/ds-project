@@ -55,9 +55,14 @@ def parse_path(current_dir, new_path):
 
 def send_recv_name_server(args):
     sock = socket.socket()
+    sock.settimeout(15)
     sock.connect((server_ip, port))
     sock.sendall(str.encode("\n".join(args)))
-    res = sock.recv(2048).decode('utf-8').split('\n')
+    try:
+        res = sock.recv(4096).decode('utf-8').split('\n')
+    except socket.error:
+        print("The connection has taken too long and timed out.")
+        return None
     if len(res) == 1:
         res = res[0]
     sock.close()
@@ -190,13 +195,17 @@ if __name__ == "__main__":
         elif c == 'cp':
             if error_arg_len(expected_len=2) or error_forbidden_symbols(args[1]):
                 continue
-            ack = send_recv_name_server([user, 'c', current_dir + '/%s' % args[0], args[1]])
-            if ack == "1":
-                print('The file %s has been successfully copied.' % args[0])
-            elif ack == "2":
-                print('File %s already exists in this directory.' % args[0])
-            elif ack == "0":
-                print('Error while creating a new file.')
+            res = send_recv_name_server([user, 'cp', current_dir + '\\' + args[0], parse_path(current_dir, args[1])])
+            if res == '1':
+                continue
+            elif res == '2':
+                print("This file doesn't exist.")
+            elif res == '3':
+                print("This directory doesn't exist.")
+            elif res == '4':
+                print("This directory already contains a file with the same name.")
+            elif res == "0":
+                print("Sorcery! It didn't work.")
 
         elif c == 'mv':
             if error_arg_len(expected_len=2):
@@ -208,6 +217,8 @@ if __name__ == "__main__":
                 print("This file doesn't exist.")
             elif res == '3':
                 print("This directory doesn't exist.")
+            elif res == '4':
+                print("This directory already contains a file with the same name.")
             else:
                 print("Sorcery! It didn't work.")
 
