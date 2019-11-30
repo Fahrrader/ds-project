@@ -8,8 +8,7 @@ def show_help():
     print('init         -- to initialize a new repository with this IP address.')
     print('c [filename] -- create an empty file in your directory.')
     print('r [filename] -- store and open a file from your directory.')  # TODO if read multiple times, replace local
-    print(
-        'w [filename] -- send_recv_name_server a file from your computer to the directory with replacing the old one.')
+    print('w [filename] -- send_recv_name_server a file from your computer to the directory with replacing the old one.')
     print('d [filename] -- delete a file from your directory.')
     print('i [filename] -- display information about a file in your directory.')
     # TODO if we have time, make rename
@@ -130,7 +129,7 @@ if __name__ == "__main__":
         elif c == 'c':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
-            ack = send_recv_name_server([user, 'c', current_dir + '/%s' % args[0]])
+            ack = send_recv_name_server([user, 'c', current_dir + '\\' + args[0]])
             if ack == "1":
                 print('A new file %s has been successfully created.' % args[0])
             elif ack == "2":
@@ -141,7 +140,7 @@ if __name__ == "__main__":
         elif c == 'r':
             if error_arg_len(expected_len=1):
                 continue
-            ack = send_recv_name_server([user, 'r', current_dir + '/%s' % args[0]])
+            ack = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
             storage_ip = ack[0]
             storage_port = ack[1]
             ack = recv_storage(['r', current_dir + '/%s' % args[0]])
@@ -153,7 +152,7 @@ if __name__ == "__main__":
         elif c == 'w':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
-            ack = send_recv_name_server([user, 'r', current_dir + '/%s' % args[0]])
+            ack = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
             storage_ip = ack[0]
             storage_port = ack[1]
             f = open(args[0])
@@ -167,7 +166,7 @@ if __name__ == "__main__":
         elif c == 'd':
             if error_arg_len(expected_len=1):
                 continue
-            ack = send_recv_name_server([user, 'd', current_dir + '/%s' % args[0]])
+            ack = send_recv_name_server([user, 'd', current_dir + '\\' + args[0]])
             if ack == 1:
                 print('The operation has been successfully done.')
             elif ack == 2:
