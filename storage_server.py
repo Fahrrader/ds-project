@@ -1,14 +1,17 @@
+import os
 import socket
 from threading import Thread
 from time import sleep
 
 
-def replicate(file_name):
+def initialize_replic(file_name):
     sock = socket.socket()
     sock.connect((name_server_ip, name_server_port))
     sock.sendall(str.encode("\n".join(['replicate', file_name])))
-    storage_list = sock.recv(2048).decode('utf-8').split('\n')
     sock.close()
+
+
+def replicate(file_name, storage_list):
     for storage_info in storage_list:
         send_update_to_storage(file_name, storage_info[0], storage_info[1])
 
@@ -20,10 +23,6 @@ def send_update_to_storage(file_name, storage_port, storage_ip):
     result = sock.recv(2048).decode('utf-8').split('\n')
     if result == '1':
         print("The file has been successfully replicated.")
-
-
-def delete_file(file_name):
-    pass
 
 
 def create_file(file_name):
@@ -58,20 +57,29 @@ class clientListener(Thread):
         res = ''
 
         if command == 'r':
-            pass
+            file_name = args[0]
+            f = open(file_name)
+            data = f.read()
+            res = data
 
         elif command == 'w':
             file_name = args[0]
             data = args[1:]
             res = edit_file(file_name, data)
-            replicate(file_name)
+            initialize_replic(file_name)
 
 
         elif command == 'd':
             file_name = args[0]
+            path = os.path.join(os.path.abspath(os.path.dirname(__file__)), file_name)
+            os.remove(path)
+            res = '1'
 
         elif command == 'replicate':
-            pass
+            file_name = args[0]
+            storage_info = args[1:]
+            replicate(file_name, storage_info)
+            res = 1
 
         self.sock.sendall(str.encode("\n".join(res)))
         self._close()
