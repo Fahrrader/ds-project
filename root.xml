@@ -1,13 +1,21 @@
 <root>
-	<d>Hay
-		<f This is hay>
-			0;1;2
+	<user name="mydude">
+		<d name="Hay">
+			<f name="This is hay">
+				0,1,2
+			</f>
+		</d>
+		<d name="Movies">
+			<f name="This is hay">
+				3,1,5
+			</f>
+			<f name="scooby.mp4">
+				0,3,4
+			</f>
+		</d>
+		<d name="Papka" />
+		<f name="Wonderful.png">
+			2,5,4
 		</f>
-	</d>
-	<d>Movies
-		<f This is hay>
-			3;1;5
-		</f>
-	</d>
-	<d>Papka</d>
+	<d name="Vault"><d name="haha" /></d></user>
 </root>

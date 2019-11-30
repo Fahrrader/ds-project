@@ -60,9 +60,9 @@ if __name__ == "__main__":
     sock = socket.socket()
     connect()  # test
 
-    current_dir = "root"
+    current_dir = ""
     while True:
-        command = input(current_dir + '>')
+        command = input(user + '/' + current_dir + '> ')
         args = command.split()
         c = args[0]
         args = args[1:]
