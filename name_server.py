@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 from threading import Thread
 from random import choices
 import time
+import datetime
 
 
 def create_root():
@@ -32,19 +33,18 @@ def get_node(user, path):
 
 def get_last_node_split(path: str):
     file_begins_at = path.rfind('\\')
-    return path[:file_begins_at] if file_begins_at != -1 else "", file_begins_at
+    return path[:file_begins_at] if file_begins_at != -1 else "", path[file_begins_at+1:]
 
 
 def get_file(user, path: str):
-    cut_path, file_begins_at = get_last_node_split(path)
+    cut_path, file = get_last_node_split(path)
     # print(cut_path, file_begins_at)
     node = get_node(user, cut_path)
-    return node.find('./f[@name="%s"]' % path[file_begins_at+1:]) if node is not None else None, node
+    return node.find('./f[@name="%s"]' % file) if node is not None else None, node
 
 
 def make_dir(user, path):
-    cut_path, new_dir_begins_at = get_last_node_split(path)
-    new_dir = path[new_dir_begins_at+1:]
+    cut_path, new_dir = get_last_node_split(path)
     node = get_node(user, cut_path)
     if node is None:
         return '0'
@@ -57,11 +57,11 @@ def make_dir(user, path):
 
 
 def delete_dir(user, path):
-    cut_path, dir_begins_at = get_last_node_split(path)
+    cut_path, del_dir = get_last_node_split(path)
     node = get_node(user, cut_path)
     if node is None:
         return '0'
-    deleted = node.find('./d[@name="%s"]' % path[dir_begins_at + 1:])
+    deleted = node.find('./d[@name="%s"]' % del_dir)
     if deleted is None:
         return '2'
     node.remove(deleted)
@@ -122,15 +122,51 @@ def create_file(user, path):
     while elements:
         new_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
         elements = root.findall('.//*[@id="%s"]' % new_id)
-    # TODO
-    """cut_path, file_name = get_last_node_split(path)
-    file = ET.SubElement(node, tag='f', attrib={
+    # todo send one of the banks IP (the most free one, perhaps) and the file id
+    # TODO after bank returns signal that the file is uploaded:
+    # file id, size
+    cut_path, file_name = get_last_node_split(path)
+    file = ET.SubElement(node, 'f', attrib={
         'id': new_id,
         'name': file_name,
-        'size': 0,  # something
-        'created': time.time(),
-        'modified': time.time()
-    })    """
+        'size': '0',  # something
+        'created': str(datetime.datetime.now()),
+        'modified': str(datetime.datetime.now())
+    })
+    # TODO ping banks with other IPs for it to store the thing
+    # TODO also ping client that the upload is complete
+    tree.write(root_filename)
+    return '1'
+
+
+def read_file(user, path):
+    file, node = get_file(user, path)
+    if node is None:
+        return '0'
+    if file is None:
+        return '2'
+    # TODO return IP, id
+    return
+
+
+def write_file(user, path):
+    file, node = get_file(user, path)
+    if node is None:
+        return '0'
+    if file is None:
+        return '2'
+    # TODO return IP, id
+    return '1'
+
+
+def delete_file(user, path):
+    file, node = get_file(user, path)
+    if node is None:
+        return '0'
+    if file is None:
+        return '2'
+    bank_indices = file
+    # TODO send to all banks commands to delete
     return '1'
 
 
@@ -169,14 +205,11 @@ class ClientListener(Thread):
         elif command == 'c':
             res = create_file(name, args[2])
         elif command == 'r':
-            pass
-
+            res = read_file(name, args[2])
         elif command == 'w':
-            pass
-
+            res = write_file(name, args[2])
         elif command == 'd':
-            pass
-
+            res = delete_file(name, args[2])
         elif command == 'i':
             res = get_file_info(name, args[2])
         elif command == 'cp':
