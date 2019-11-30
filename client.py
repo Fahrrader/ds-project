@@ -23,20 +23,44 @@ def show_help():
     print('q            -- same as exit.')
 
 
-def arg_len_error(expected_len):
+def error_forbidden_symbols(name):
+    forbidden_chars = ['\\', '|', '/', '"', '*', '\'', ':', '<', '>']
+    error = name.strip() == '' or any(c in name for c in forbidden_chars)
+    if error:
+        print('The following characters cannot be used here: \\|/"*\':<>')
+    return error
+
+
+def error_arg_len(expected_len):
     if len(args) != expected_len:
         print("Unexpected number of arguments.")
         return True
 
 
-if __name__ == "__main__":
-    SERVER_IP = 'localhost'  # TODO
-    PORT = 8080
-    s = socket.socket()
-    s.connect((SERVER_IP, PORT))  # PORT?
-    print("Connection established.")
+def connect():
+    sock.connect((server_ip, port))
+    sock.send(str.encode(user, 'utf-8'))
+    print("Connection established.")  # test
 
-    current_dir = "root"  # change to os.path?
+
+def close():
+    # sock.shutdown(how=socket.SHUT_RDWR)
+    sock.close()
+
+
+if __name__ == "__main__":
+    user = "Unknown"
+    while True:
+        user = input("Welcome! State your username in order to access the file sharing system: ")
+        if not error_forbidden_symbols(user):
+            break
+
+    server_ip = 'localhost'  # TODO
+    port = 8800
+    sock = socket.socket()
+    connect()  # test
+
+    current_dir = "root"
     while True:
         command = input(current_dir + '>')
         args = command.split()
@@ -45,8 +69,7 @@ if __name__ == "__main__":
         if c == 'help':
             show_help()
         if c == 'exit' or c == 'quit' or c == 'e' or c == 'q' or c == 'x' or c == 'close':
-            s.shutdown(how=socket.SHUT_RDWR)
-            s.close()
+            close()
             print('bye-bye')
             sleep(0.1)
             break
@@ -55,45 +78,46 @@ if __name__ == "__main__":
 
             print("Initialized a new system.")
         elif c == 'c':
-            if arg_len_error(expected_len=1):
+            if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
 
         elif c == 'r':
-            if arg_len_error(expected_len=1):
+            if error_arg_len(expected_len=1):
                 continue
 
         elif c == 'w':
-            if arg_len_error(expected_len=1):
+            if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
 
         elif c == 'd':
-            if arg_len_error(expected_len=1):
+            if error_arg_len(expected_len=1):
                 continue
 
         elif c == 'i':
-            if arg_len_error(expected_len=1):
+            if error_arg_len(expected_len=1):
                 continue
 
         elif c == 'cp':
-            if arg_len_error(expected_len=2):
+            if error_arg_len(expected_len=2) or error_forbidden_symbols(args[1]):
                 continue
 
         elif c == 'mv':
-            if arg_len_error(expected_len=2):
+            if error_arg_len(expected_len=2):
                 continue
 
         elif c == 'cd':
-            if arg_len_error(expected_len=1):
+            if error_arg_len(expected_len=1):
                 continue
-            # TODO set current_dir to new
+            # TODO set current_dir to new after all
             # current_dir = current_dir + '\\' + args[0]  # path.join(current_dir, args[0])
         elif c == 'ls':
-            if arg_len_error(expected_len=1):
+            if error_arg_len(expected_len=1):
                 continue
 
         elif c == 'md':
-            if arg_len_error(expected_len=1):
+            if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
+            # TODO put restrictions on names (\|/"*':<>) and empty
 
         else:
             print("Unrecognized. Try 'help' if in doubt.")
