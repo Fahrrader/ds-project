@@ -7,7 +7,7 @@ def show_help():
     print('init         -- to initialize a new repository with this IP address.')
     print('c [filename] -- create an empty file in your directory.')
     print('r [filename] -- store and open a file from your directory.')  # TODO if read multiple times, replace local
-    print('w [filename] -- send_recv_ack a file from your computer to the directory with replacing the old one.')
+    print('w [filename] -- send_recv_name_server a file from your computer to the directory with replacing the old one.')
     print('d [filename] -- delete a file from your directory.')
     print('i [filename] -- display information about a file in your directory.')
     print('cp [filename] [path] -- store a copy of a file in the new path.')
@@ -38,24 +38,30 @@ def error_arg_len(expected_len):
 
 
 def connect_name_server():
-    sock.connect((server_ip, port))
-    # sock.send_recv_ack(str.encode(user, 'utf-8'))
+    sock_name_server.connect((server_ip, port))
+    # sock.send_recv_name_server(str.encode(user, 'utf-8'))
     # print("Connection established.")  # test
 
 def connect_storage(storage_ip, port):
-    sock.connect((storage_ip, port))
+    sock_storage.connect((storage_ip, port))
 
 def close():
     # sock.shutdown(how=socket.SHUT_RDWR)
-    sock.close()
+    sock_name_server.close()
 
 
-def send_recv_ack(args):
+def send_recv_name_server(args):
     connect_name_server()
-    sock.sendall(str.encode("\n".join(args)))
-    ack = sock.recv(1024).decode('utf-8')
+    sock_name_server.sendall(str.encode("\n".join(args)))
+    ack = sock_name_server.recv(1024).decode('utf-8')
     close()
     return ack
+
+def send_recv_storage(args, storage_ip, storage_port):
+    connect_storage(storage_ip, storage_port)
+    sock_storage.sendall(str.encode("\n".join(args)))
+    #TODO file recieving
+    sock_storage.close()
 
 
 if __name__ == "__main__":
@@ -67,7 +73,8 @@ if __name__ == "__main__":
 
     server_ip = 'localhost'  # TODO
     port = 8800
-    sock = socket.socket()
+    sock_name_server = socket.socket()
+    sock_storage = socket.socket()
     # connect_name_server()  # test
 
     current_dir = ""
@@ -85,7 +92,7 @@ if __name__ == "__main__":
             break
 
         elif c == 'init':
-            ack = send_recv_ack([user, 'init'])
+            ack = send_recv_name_server([user, 'init'])
             if ack == 0:
                 print("Initialized a new system.")
             else:
@@ -94,7 +101,7 @@ if __name__ == "__main__":
         elif c == 'c':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
-            ack = send_recv_ack([user, 'c', current_dir + '/%s' %args[0]])
+            ack = send_recv_name_server([user, 'c', current_dir + '/%s' % args[0]])
             # 0 - everything is ok
             # 1 - file already exist
             # -1 - error
@@ -109,6 +116,11 @@ if __name__ == "__main__":
         elif c == 'r':
             if error_arg_len(expected_len=1):
                 continue
+            ack = send_recv_name_server([user, 'r', current_dir + '/%s' % args[0]])
+            storage_ip = ack[0]
+            storage_port = ack[1]
+
+
 
         elif c == 'w':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
@@ -117,7 +129,7 @@ if __name__ == "__main__":
         elif c == 'd':
             if error_arg_len(expected_len=1):
                 continue
-            ack = send_recv_ack([user, 'd', current_dir + '/%s' %args[0]])
+            ack = send_recv_name_server([user, 'd', current_dir + '/%s' % args[0]])
             if ack == 0:
                 print('The operation has been successfully done.')
             elif ack == 1:
