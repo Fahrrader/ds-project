@@ -36,10 +36,9 @@ def get_file(user, path: str):
     cut_path, file_begins_at = get_last_node_split(path)
     # print(cut_path, file_begins_at)
     node = get_node(user, cut_path)
-    return node.find('./f[@name="%s"]' % path[file_begins_at+1:]) if node is not None else None
+    return node.find('./f[@name="%s"]' % path[file_begins_at+1:]) if node is not None else None, node
 
 
-# TODO return codes? like done, already exists, no such pathway
 def make_dir(user, path):
     cut_path, new_dir_begins_at = get_last_node_split(path)
     new_dir = path[new_dir_begins_at+1:]
@@ -56,15 +55,31 @@ def make_dir(user, path):
 
 def delete_dir(user, path):
     cut_path, dir_begins_at = get_last_node_split(path)
-    node = get_node(user, cut_path)  # cut_path)
+    node = get_node(user, cut_path)
     if node is None:
-        return 0
+        return '0'
     deleted = node.find('./d[@name="%s"]' % path[dir_begins_at + 1:])
     if deleted is None:
-        return 2
+        return '2'
     node.remove(deleted)
     tree.write(root_filename)
-    return 1
+    return '1'
+
+
+def move_file(user, path, path2):
+    # cut_path, dir_begins_at = get_last_node_split(path)
+    file, node1 = get_file(user, path)
+    if node1 is None:
+        return '0'
+    if file is None:
+        return '2'
+    node2 = get_node(user, path2)
+    if node2 is None:
+        return '3'
+    node2.append(file)
+    node1.remove(file)
+    tree.write(root_filename)
+    return '1'
 
 
 def check_for_dir(user, path):
@@ -128,7 +143,6 @@ class ClientListener(Thread):
             pass
 
         elif command == 'd':
-            # TODO func for both files and directories
             pass
 
         elif command == 'i':
@@ -138,14 +152,15 @@ class ClientListener(Thread):
             pass
 
         elif command == 'mv':
-            pass
-
+            res = move_file(name, args[2], args[3])
         elif command == 'cd':
             res = check_for_dir(name, args[2])
         elif command == 'ls':
             res = list_dir(name, args[2])
         elif command == 'md':
             res = make_dir(name, args[2])
+        elif command == 'dd':
+            res = delete_dir(name, args[2])
         self.sock.sendall(str.encode("\n".join(res)))
 
         # welcome_user(self.addr[0], self.addr[1], self.name)

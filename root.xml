@@ -1,2 +1,18 @@
 <root>
-	<user name="abraham" /><user name="myboy" /><user name="mydude" /><user name="me"><d name="alice"><d name="bobetto" /></d><d name="bob" /></user><user name="mario"><d name="me" /><d name="you" /><d name="them" /></user></root>
+	<user name="abraham" />
+	<user name="myboy" />
+	<user name="mydude" />
+	<user name="me">
+		<d name="alice">
+			<d name="bobetto" />
+		<f id="8j6ujdtcuyfd6cj8iao43" name="file" />
+		</d>
+		<d name="bob" />
+	</user>
+	<user name="mario">
+		<d name="me"><d name="sid" /><d name="mammoth" /></d>
+		<d name="you" />
+		<d name="them" />
+	<f id="1234567" name="skin.txt" />
+		</user>
+</root>

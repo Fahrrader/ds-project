@@ -11,12 +11,13 @@ def show_help():
     print('w [filename] -- send_recv_name_server a file from your computer to the directory with replacing the old one.')
     print('d [filename] -- delete a file from your directory.')
     print('i [filename] -- display information about a file in your directory.')
+    # TODO if we have time, make rename
     print('cp [filename] [path] -- store a copy of a file in the new path.')
     print('mv [filename] [path] -- store the file in the new path.')
     print('cd [path]    -- change the current directory.')
     print('ls           -- list the files in the current directory.')
     print('md [path]    -- make a new directory in the current directory.')
-    print('d [path]     -- delete a directory from the current directory.')  # TODO support both files and dirs
+    print('dd [path]    -- delete a directory from the current directory.')
     print('help         -- list all commands.')
     print('exit         -- close the connection and the program.')
     print('quit         -- same as exit.')
@@ -36,6 +37,20 @@ def error_arg_len(expected_len):
     if len(args) != expected_len:
         print("Unexpected number of arguments.")
         return True
+
+
+def parse_path(current_dir, new_path):
+    temp_dir = current_dir
+    for d in new_path.split('\\'):
+        if d == '..':
+            return_index = temp_dir.rfind('\\')
+            temp_dir = temp_dir[:return_index] if return_index != -1 else ""
+            continue
+        if error_forbidden_symbols(d):
+            temp_dir = current_dir
+            break
+        temp_dir += ('\\' if temp_dir != "" else "") + d
+    return temp_dir
 
 
 def send_recv_name_server(args):
@@ -90,7 +105,6 @@ if __name__ == "__main__":
     sock_name_server = socket.socket()
     sock_storage = socket.socket()
     # connect_name_server()  # test
-    # webbrowser.open('file.txt')
 
     current_dir = ""
     while True:
@@ -124,21 +138,18 @@ if __name__ == "__main__":
             elif ack == "0":
                 print('Error while creating a new file.')
 
-
         elif c == 'r':
             if error_arg_len(expected_len=1):
                 continue
             ack = send_recv_name_server([user, 'r', current_dir + '/%s' % args[0]])
             storage_ip = ack[0]
             storage_port = ack[1]
-            ack  = recv_storage(['r', current_dir + '/%s' % args[0]])
+            ack = recv_storage(['r', current_dir + '/%s' % args[0]])
             if ack == '1':
                 f = open(args[0])
                 #TODO собственно читать файл
             else:
-                print("Some error has occured.")
-
-
+                print("Some error has occurred.")
 
         elif c == 'w':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
@@ -152,8 +163,7 @@ if __name__ == "__main__":
             if ack == '1':
                 print("The file has been successfully writen.")
             else:
-                print("Some error has occured.")
-
+                print("Some error has occurred.")
 
         elif c == 'd':
             if error_arg_len(expected_len=1):
@@ -164,7 +174,7 @@ if __name__ == "__main__":
             elif ack == 2:
                 print('There is no such file or directory in the current directory.')
             else:
-                print("Some error has occured.")
+                print("Some error has occurred.")
 
         elif c == 'i':
             if error_arg_len(expected_len=1):
@@ -177,24 +187,22 @@ if __name__ == "__main__":
         elif c == 'mv':
             if error_arg_len(expected_len=2):
                 continue
+            res = send_recv_name_server([user, 'mv', current_dir + '\\' + args[0], parse_path(current_dir, args[1])])
+            if res == '1':
+                continue
+            elif res == '2':
+                print("This file doesn't exist.")
+            elif res == '3':
+                print("This directory doesn't exist.")
+            else:
+                print("Sorcery! It didn't work.")
 
         elif c == 'cd':
             if error_arg_len(expected_len=1):
                 continue
-
-            temp_dir = current_dir
-            for d in args[0].split('\\'):
-                if d == '..':
-                    return_index = temp_dir.rfind('\\')
-                    temp_dir = temp_dir[:return_index] if return_index != -1 else ""
-                    continue
-                if error_forbidden_symbols(d):
-                    temp_dir = current_dir
-                    break
-                temp_dir += ('\\' if temp_dir != "" else "") + d
+            temp_dir = parse_path(current_dir, args[0])
             if temp_dir == current_dir:
                 continue
-
             res = send_recv_name_server([user, 'cd', temp_dir])
             if res == '1':
                 current_dir = temp_dir  # path.join(current_dir, args[0])
@@ -211,6 +219,17 @@ if __name__ == "__main__":
                 continue
             res = send_recv_name_server([user, 'md', current_dir + '\\' + args[0]])
             if res != '1':
+                print("Sorcery! It didn't work.")
+
+        elif c == 'dd':
+            if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
+                continue
+            res = send_recv_name_server([user, 'dd', current_dir + '\\' + args[0]])
+            if res == '1':
+                continue
+            elif res == '2':
+                print("This directory doesn't exist.")
+            else:
                 print("Sorcery! It didn't work.")
 
         else:
