@@ -1,9 +1,12 @@
+from threading import Thread
 import socket
 from threading import Thread
-import os
-import webbrowser
 from time import sleep
-import socket
+
+
+def replicate():
+    pass
+
 
 class clientListener(Thread):
     def __init__(self, sock: socket.socket):
@@ -18,8 +21,9 @@ class clientListener(Thread):
         print(self.name + ' disconnected.')
 
     def run(self):
-        # command = [i for i in self.sock.recv(2048).decode('utf-8').split('\n')]
         command = self.sock.recv(2048).decode('utf-8').split('\n')
+        args = command[1:]
+        command = command[0]
         res = ''
 
         if command == 'r':
@@ -55,7 +59,7 @@ class heartbeat(Thread):
         print(self.name + ' disconnected.')
 
     def run(self):
-        server_ip = 'localhost'  #TODO
+        server_ip = 'localhost'  # TODO
         port = 8800
         sleep(1)
         sock = socket.socket()
