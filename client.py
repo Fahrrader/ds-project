@@ -82,10 +82,11 @@ def send_storage(args, storage_ip, storage_port):
 
 
 def recv_storage(args, storage_ip, storage_port):
-    # for cases when we recieve a file from the server
+    # for cases when we receive a file from the server
     sock = socket.socket()
     sock.connect((storage_ip, storage_port))
     # connected storage server
+    sock.sendall(str.encode("\n".join(args)))
     f = open(args[1])
     data = sock.recv(1024)
     sock.close()
@@ -148,9 +149,10 @@ if __name__ == "__main__":
             ack = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
             storage_ip = ack[0]
             storage_port = ack[1]
-            ack = recv_storage(['r', current_dir + '/%s' % args[0]])
-            if ack == '1':
-                webbrowser.open(args[0])
+            file_name = ack[2]
+            result = recv_storage(['r', file_name], storage_ip, storage_port)
+            if result == '1':
+                webbrowser.open(file_name)
             else:
                 print("Some error has occurred.")
 
@@ -160,9 +162,10 @@ if __name__ == "__main__":
             ack = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
             storage_ip = ack[0]
             storage_port = ack[1]
+            file_name = ack[2]
             f = open(args[0])
-            l = f.read()
-            ack = send_storage(args, storage_ip, storage_port)
+            data = f.read()
+            ack = send_storage(['w', file_name, data], storage_ip, storage_port)
             if ack == '1':
                 print("The file has been successfully writen.")
             else:
