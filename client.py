@@ -114,12 +114,15 @@ if __name__ == "__main__":
     while True:
         command = input(user + ('\\' + current_dir if current_dir != "" else current_dir) + '> ')
         args = command.split()
+        if len(args) == 0:
+            continue
         c = args[0]
         args = args[1:]
+
         if c == 'help':
             show_help()
 
-        if c == 'exit' or c == 'quit' or c == 'e' or c == 'q' or c == 'x' or c == 'close':
+        elif c == 'exit' or c == 'quit' or c == 'e' or c == 'q' or c == 'x' or c == 'close':
             print('bye-bye')
             sleep(0.1)
             break
@@ -129,7 +132,7 @@ if __name__ == "__main__":
             if ack == '1':
                 print("Initialized a new system.")
             else:
-                print("Error while initializing the new system.")
+                print("Error while initializing a new system.")
 
         elif c == 'c':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
@@ -140,7 +143,7 @@ if __name__ == "__main__":
             elif ack == "2":
                 print('File %s already exists in this directory.' % args[0])
             elif ack == "0":
-                print('Error while creating a new file.')
+                print("Sorcery! It didn't work.")
 
         elif c == 'r':
             if error_arg_len(expected_len=1):
@@ -152,12 +155,12 @@ if __name__ == "__main__":
             if ack == '1':
                 webbrowser.open(args[0])
             else:
-                print("Some error has occurred.")
+                print("Sorcery! It didn't work.")
 
         elif c == 'w':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
-            ack = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
+            ack = send_recv_name_server([user, 'w', current_dir + '\\' + args[0]])
             storage_ip = ack[0]
             storage_port = ack[1]
             f = open(args[0])
@@ -166,18 +169,18 @@ if __name__ == "__main__":
             if ack == '1':
                 print("The file has been successfully writen.")
             else:
-                print("Some error has occurred.")
+                print("Sorcery! It didn't work.")
 
         elif c == 'd':
             if error_arg_len(expected_len=1):
                 continue
-            ack = send_recv_name_server([user, 'd', current_dir + '\\' + args[0]])
-            if ack == 1:
-                print('The operation has been successfully done.')
-            elif ack == 2:
-                print('There is no such file or directory in the current directory.')
+            res = send_recv_name_server([user, 'd', current_dir + '\\' + args[0]])
+            if res == '1':
+                print('The file has been deleted.')
+            elif res == '2':
+                print('There is no such file in the current directory.')
             else:
-                print("Some error has occurred.")
+                print("Sorcery! It didn't work.")
 
         elif c == 'i':
             if error_arg_len(expected_len=1):
@@ -237,11 +240,11 @@ if __name__ == "__main__":
                 print("Sorcery! It didn't work.")
 
         elif c == 'ls':
-            result = send_recv_name_server([user, 'ls', current_dir])
-            if len(result) == 1:
-                print(result)
+            res = send_recv_name_server([user, 'ls', current_dir])
+            if len(res[0]) == 1:
+                print(res)
             else:
-                for i in result:
+                for i in res:
                     print(i)
 
         elif c == 'md':
@@ -255,6 +258,12 @@ if __name__ == "__main__":
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
             res = send_recv_name_server([user, 'dd', current_dir + '\\' + args[0]])
+            if res == '9':
+                while res != 'y' and res != 'n' and res != '':
+                    res = input('The directory is not empty. Do you want to proceed? (Y/n)').lower()
+                    print(res)
+                if res == 'y' or res == '':
+                    send_recv_name_server([user, 'dd', current_dir + '\\' + args[0]])
             if res == '1':
                 continue
             elif res == '2':

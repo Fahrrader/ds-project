@@ -14,14 +14,6 @@ def create_root():
     return tree
 
 
-def welcome_user(ip, port, name):
-    users.append({
-        'ip': ip,
-        'port': port,
-        'name': name
-    })
-
-
 def get_node(user, path):
     xml_path = './user[@name="%s"]' % user
     if path.strip() != "":
@@ -64,6 +56,25 @@ def delete_dir(user, path):
     deleted = node.find('./d[@name="%s"]' % del_dir)
     if deleted is None:
         return '2'
+    confirm = '1'
+    for _ in deleted:
+        confirm = '9'
+    """node.remove(deleted)
+    tree.write(root_filename)
+    return '1'"""
+    return confirm
+
+
+def finally_delete_dir(user, path):
+    cut_path, del_dir = get_last_node_split(path)
+    node = get_node(user, cut_path)
+    if node is None:
+        return '0'
+    deleted = node.find('./d[@name="%s"]' % del_dir)
+    if deleted is None:
+        return '2'
+    # TODO go through every single file in the node, delete
+    # deleted.findall('.//f')
     node.remove(deleted)
     tree.write(root_filename)
     return '1'
@@ -155,7 +166,11 @@ def create_file(user, path):
         'created': str(datetime.datetime.now()),
         'modified': str(datetime.datetime.now())
     })
+    # set text to already replicated server
     # TODO ping banks with other IPs for it to store the thing
+    # each time update text to new replicated server
+    # each time a server stops responding, find the files from the server,
+    # run through formula and replicate somewhere else if need be
     # TODO also ping client that the upload is complete
     tree.write(root_filename)
     return '1'
@@ -178,6 +193,10 @@ def write_file(user, path):
     if file is None:
         return '2'
     # TODO return IP, id
+    # wait for ack from bank
+    file.set('modified', str(datetime.datetime.now()))
+    file.set('size', '0')  # change
+    # send signal to bank to update all others
     return '1'
 
 
@@ -187,8 +206,13 @@ def delete_file(user, path):
         return '0'
     if file is None:
         return '2'
-    bank_indices = file
+    bank_indices = file.text.strip().split(',') if file.text is not None else []
+    print(bank_indices)
     # TODO send to all banks commands to delete
+    file.set('op', 'd')
+    # TODO do the following ONLY AFTER every (functioning) replicant deletes
+    node.remove(file)
+    tree.write(root_filename)
     return '1'
 
 
@@ -248,6 +272,12 @@ class ClientListener(Thread):
             res = delete_dir(name, args[2])
         self.sock.sendall(str.encode("\n".join(res)))
 
+        if res == '9':
+            args = self.sock.recv(4096).decode('utf-8').split('\n')
+            if args[0] == name and args[1] == command:
+                res = finally_delete_dir(args[0], args[2])
+                self.sock.sendall(str.encode("\n".join(res)))
+
         # welcome_user(self.addr[0], self.addr[1], self.name)
         # print("Hi, %s!" % self.name)
         # TODO all command receiving should be here
@@ -262,7 +292,6 @@ if __name__ == "__main__":
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind((host, port))
 
-    users = []  # maybe remove? don't see the purpose
     banks = []
     # TODO find/lift banks?
     try:
