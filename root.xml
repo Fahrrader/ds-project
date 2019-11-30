@@ -1,2 +1,2 @@
 <root>
-	<user name="abraham" /><user name="myboy" /><user name="mydude" /><user name="me"><d name="4" /><d name="alice" /></user></root>
+	<user name="abraham" /><user name="myboy" /><user name="mydude" /><user name="me"><d name="alice"><d name="bobetto" /></d><d name="bob" /></user><user name="mario"><d name="me" /><d name="you" /><d name="them" /></user></root>

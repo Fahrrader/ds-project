@@ -45,38 +45,38 @@ def make_dir(user, path):
     new_dir = path[new_dir_begins_at+1:]
     node = get_node(user, cut_path)
     if node is None:
-        return '-1'
+        return '0'
     if node.find('./d[@name="%s"]' % new_dir) is not None:
-        return '1'
+        return '2'
     dir_node = ET.SubElement(node, 'd')
     dir_node.set('name', new_dir)
     tree.write(root_filename)
-    return '0'
+    return '1'
 
 
 def delete_dir(user, path):
     cut_path, dir_begins_at = get_last_node_split(path)
     node = get_node(user, cut_path)  # cut_path)
     if node is None:
-        return False
+        return 0
     deleted = node.find('./d[@name="%s"]' % path[dir_begins_at + 1:])
     if deleted is None:
-        return False
+        return 2
     node.remove(deleted)
     tree.write(root_filename)
-    return True
+    return 1
 
 
 def check_for_dir(user, path):
     """used for change directory"""
     node = get_node(user, path)
-    return node is not None
+    return '1' if node is not None else '2'
 
 
 def list_dir(user, path):
     node = get_node(user, path)
     if node is None:
-        return None
+        return []
     listed = []
     for el in node:
         listed.append(el.tag + ': ' + el.attrib["name"])
@@ -90,7 +90,7 @@ def init(user):
     user_node = ET.SubElement(root, 'user')
     user_node.set('name', user)
     tree.write(root_filename)
-    return '0'
+    return '1'
 
 
 # def create_file(user, path):
@@ -115,10 +115,10 @@ class ClientListener(Thread):
         command = args[1]
         print(name, command)
         self.name = name
+        res = '0'
 
         if command == 'init':
             res = init(name)
-            self.sock.send(str.encode(res))
         elif command == 'c':
             pass
         elif command == 'r':
@@ -141,15 +141,13 @@ class ClientListener(Thread):
             pass
 
         elif command == 'cd':
-            pass
-
+            res = check_for_dir(name, args[2])
         elif command == 'ls':
             res = list_dir(name, args[2])
-            self.sock.sendall(str.encode("\n".join(res)))
         elif command == 'md':
             res = make_dir(name, args[2])
-            self.sock.send(str.encode(res))
-            
+        self.sock.sendall(str.encode("\n".join(res)))
+
         # welcome_user(self.addr[0], self.addr[1], self.name)
         # print("Hi, %s!" % self.name)
         # TODO all command receiving should be here

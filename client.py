@@ -1,4 +1,5 @@
-from os import path
+import os
+import webbrowser
 from time import sleep
 import socket
 
@@ -84,10 +85,11 @@ if __name__ == "__main__":
     sock_name_server = socket.socket()
     sock_storage = socket.socket()
     # connect_name_server()  # test
+    # webbrowser.open('file.txt')
 
     current_dir = ""
     while True:
-        command = input(user + current_dir + '> ')
+        command = input(user + ('\\' + current_dir if current_dir != "" else current_dir) + '> ')
         args = command.split()
         c = args[0]
         args = args[1:]
@@ -101,7 +103,7 @@ if __name__ == "__main__":
 
         elif c == 'init':
             ack = send_recv_name_server([user, 'init'])
-            if ack == '0':
+            if ack == '1':
                 print("Initialized a new system.")
             else:
                 print("Error while initializing the new system.")
@@ -110,14 +112,14 @@ if __name__ == "__main__":
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
             ack = send_recv_name_server([user, 'c', current_dir + '/%s' % args[0]])
-            # 0 - everything is ok
-            # 1 - file already exist
-            # -1 - error
-            if ack == 0:
+            # 1 - everything is ok
+            # 2 - file already exist
+            # 0 - error
+            if ack == '1':
                 print('A new file %s has been successfully created.' %args[0])
-            elif ack == 1:
+            elif ack == '2':
                 print('File %s already exists in this directory.' %args[0])
-            elif ack == -1:
+            elif ack == '0':
                 print('Error while creating a new file.')
 
 
@@ -138,11 +140,11 @@ if __name__ == "__main__":
             if error_arg_len(expected_len=1):
                 continue
             ack = send_recv_name_server([user, 'd', current_dir + '/%s' % args[0]])
-            if ack == 0:
+            if ack == 1:
                 print('The operation has been successfully done.')
-            elif ack == 1:
+            elif ack == 2:
                 print('There is no such file or directory in the current directory.')
-            elif ack == -1:
+            else:
                 print('Error while deleting.')
 
         elif c == 'i':
@@ -160,8 +162,27 @@ if __name__ == "__main__":
         elif c == 'cd':
             if error_arg_len(expected_len=1):
                 continue
-            # TODO set current_dir to new after all
-            # current_dir = current_dir + '\\' + args[0]  # path.join(current_dir, args[0])
+
+            temp_dir = current_dir
+            for d in args[0].split('\\'):
+                if d == '..':
+                    return_index = temp_dir.rfind('\\')
+                    temp_dir = temp_dir[:return_index] if return_index != -1 else ""
+                    continue
+                if error_forbidden_symbols(d):
+                    temp_dir = current_dir
+                    break
+                temp_dir += ('\\' if temp_dir != "" else "") + d
+            if temp_dir == current_dir:
+                continue
+
+            res = send_recv_name_server([user, 'cd', temp_dir])
+            if res == '1':
+                current_dir = temp_dir  # path.join(current_dir, args[0])
+            elif res == '2':
+                print("This directory doesn't exist.")
+            else:
+                print("Sorcery! It didn't work.")
 
         elif c == 'ls':
             print(send_recv_name_server([user, 'ls', current_dir]))
@@ -169,7 +190,9 @@ if __name__ == "__main__":
         elif c == 'md':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
-            print(send_recv_name_server([user, 'md', current_dir + '\\' + args[0]]))
+            res = send_recv_name_server([user, 'md', current_dir + '\\' + args[0]])
+            if res != '1':
+                print("Sorcery! It didn't work.")
 
         else:
             print("Unrecognized. Try 'help' if in doubt.")
