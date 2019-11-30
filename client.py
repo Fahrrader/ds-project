@@ -104,7 +104,7 @@ if __name__ == "__main__":
         if not error_forbidden_symbols(user):
             break
 
-    server_ip = 'localhost'  # TODO
+    server_ip = '10.91.49.250'  # TODO
     port = 8800
     sock_name_server = socket.socket()
     sock_storage = socket.socket()
@@ -237,7 +237,12 @@ if __name__ == "__main__":
                 print("Sorcery! It didn't work.")
 
         elif c == 'ls':
-            print(send_recv_name_server([user, 'ls', current_dir]))
+            result = send_recv_name_server([user, 'ls', current_dir])
+            if len(result) == 1:
+                print(result)
+            else:
+                for i in result:
+                    print(i)
 
         elif c == 'md':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):

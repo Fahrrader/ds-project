@@ -1,9 +1,36 @@
 import socket
 from threading import Thread
-import os
-import webbrowser
 from time import sleep
-import socket
+
+
+def replicate(file_name):
+    sock = socket.socket()
+    sock.connect((name_server_ip, name_server_port))
+    sock.sendall(str.encode("\n".join(['replicate', file_name])))
+    storage_list = sock.recv(2048).decode('utf-8').split('\n')
+    sock.close()
+    for storage_info in storage_list:
+        send_update_to_storage(file_name, storage_info[0], storage_info[1])
+
+def send_update_to_storage(file_name, storage_port, storage_ip):
+    sock = socket.socket()
+    sock.connect((storage_ip, storage_port))
+    sock.sendall(str.encode("\n".join(['w', file_name])))
+    result = sock.recv(2048).decode('utf-8').split('\n')
+    if result == '1':
+        print ("The file has been successfully replicated.")
+
+def delete_file(file_name):
+    pass
+
+
+def create_file(file_name):
+    pass
+
+
+def edit_file(file_name):
+    pass
+
 
 class clientListener(Thread):
     def __init__(self, sock: socket.socket):
@@ -18,15 +45,19 @@ class clientListener(Thread):
         print(self.name + ' disconnected.')
 
     def run(self):
-        # command = [i for i in self.sock.recv(2048).decode('utf-8').split('\n')]
         command = self.sock.recv(2048).decode('utf-8').split('\n')
+        args = command[1:]
+        command = command[0]
         res = ''
 
         if command == 'r':
             pass
 
         elif command == 'w':
-            pass
+            file_name = args[0]
+            data = args[1:]
+            f = open(file_name)
+
 
         elif command == 'd':
             pass
@@ -35,10 +66,6 @@ class clientListener(Thread):
             pass
 
         self.sock.sendall(str.encode("\n".join(res)))
-
-        # welcome_user(self.addr[0], self.addr[1], self.name)
-        # print("Hi, %s!" % self.name)
-        # TODO all command receiving should be here
         self._close()
 
 
@@ -55,11 +82,9 @@ class heartbeat(Thread):
         print(self.name + ' disconnected.')
 
     def run(self):
-        server_ip = 'localhost'  #TODO
-        port = 8800
         sleep(1)
         sock = socket.socket()
-        sock.connect((server_ip, port))
+        sock.connect((name_server_port, name_server_port))
         sock.sendall(str.encode("1"))
 
 
