@@ -57,12 +57,10 @@ def parse_path(current_dir, new_path):
 def send_recv_name_server(args):
     sock = socket.socket()
     sock.connect((server_ip, port))
-    # connect_name_server()
     sock.sendall(str.encode("\n".join(args)))
     res = sock.recv(2048).decode('utf-8').split('\n')
     if len(res) == 1:
         res = res[0]
-    # close()
     sock.close()
     return res
 
@@ -180,28 +178,15 @@ if __name__ == "__main__":
         elif c == 'i':
             if error_arg_len(expected_len=1):
                 continue
-            ack = send_recv_name_server([user, 'r', current_dir + '/%s' % args[0]])
-            storage_ip = ack[0]
-            storage_port = ack[1]
-            result = recv_storage(['r', current_dir + '/%s' % args[0]], storage_ip, storage_port)
-            if len(result) == 1:
-                print("An error has occurred.")
+            res = send_recv_name_server([user, 'i', current_dir + '\\' + args[0]])
+            if res == '2':
+                print("This file doesn't exist.")
+            elif res == '0':
+                print("Sorcery! It didn't work.")
             else:
-                """"
-                name
-                size 
-                -type 
-                location
-                created 
-                modified
-                """""
-
-                print("Here is the information about the file:")
-                print('name: %s' % result[0])
-                print('size: %s bytes' % result[1])
-                print('location: %s' % result[3])
-                print('created: %s' % result[4])
-                print('modifies: %s' % result[5])
+                print('size: %s bytes' % res[0])
+                print('created: %s' % res[1])
+                print('modified: %s' % res[2])
 
         elif c == 'cp':
             if error_arg_len(expected_len=2) or error_forbidden_symbols(args[1]):

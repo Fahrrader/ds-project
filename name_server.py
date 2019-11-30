@@ -128,8 +128,8 @@ def create_file(user, path):
         'id': new_id,
         'name': file_name,
         'size': 0,  # something
-        'created': time,
-        'modified': time
+        'created': time.time(),
+        'modified': time.time()
     })    """
     return '1'
 
@@ -140,8 +140,7 @@ def get_file_info(user, path):
         return '0'
     if file is None:
         return '2'
-    print(file.attrib)
-    return '1'
+    return [file.attrib['size'], file.attrib['created'], file.attrib['modified']]
 
 
 class ClientListener(Thread):
@@ -161,7 +160,7 @@ class ClientListener(Thread):
         args = self.sock.recv(2048).decode('utf-8').split('\n')
         name = args[0]
         command = args[1]
-        print(name, command)
+        print(name + ' commands ' + command)
         self.name = name
         res = '0'
 

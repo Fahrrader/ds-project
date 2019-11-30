@@ -5,14 +5,14 @@
 	<user name="me">
 		<d name="alice">
 			<d name="bobetto" />
-		<f id="8j6ujdtcuyfd6cj8iao43" name="file" size="2048" created="time" modified="time" />
-		</d>
+		<f created="time" id="8j6ujdtcuyfd6cj8iao43" modified="time" name="file" size="2048" />
+		<d name="&#1087;&#1082;&#1094;&#1096;" /></d>
 		<d name="bob" />
 	</user>
 	<user name="mario">
 		<d name="me"><d name="sid" /><d name="mammoth" /></d>
 		<d name="you" />
 		<d name="them" />
-	<f id="1234567" name="skin.txt" size="10495" created="time" modified="time" />
+	<f created="time" id="1234567" modified="time" name="skin.txt" size="10495" />
 		</user>
 </root>
