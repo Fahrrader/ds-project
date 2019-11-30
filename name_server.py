@@ -144,7 +144,7 @@ def get_file_info(user, path):
     return '1'
 
 
-class ClientListener(Thread):
+class clientListener(Thread):
     def __init__(self, sock: socket.socket):
         super().__init__(daemon=True)
         self.sock = sock
@@ -224,4 +224,4 @@ if __name__ == "__main__":
     while True:
         con, addr = sock.accept()
         # start new thread for user
-        ClientListener(con).start()
+        clientListener(con).start()
