@@ -48,11 +48,12 @@ def close():
     sock.close()
 
 
-def init():
+def send(args):
     connect()
-    sock.sendall(str.encode("\n".join([user, 'init'])))
-
+    sock.sendall(str.encode("\n".join(args)))
+    ack = sock.recv(1024).decode('utf-8')
     close()
+    return ack
 
 
 if __name__ == "__main__":
@@ -82,8 +83,11 @@ if __name__ == "__main__":
             break
 
         elif c == 'init':
-            init()
-            print("Initialized a new system.")
+            ack = send([user, 'init'])
+            if ack == 0:
+                print("Initialized a new system.")
+            else:
+                print("Error while initializing a new system.")
         elif c == 'c':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue

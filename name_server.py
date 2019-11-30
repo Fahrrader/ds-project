@@ -109,7 +109,8 @@ class ClientListener(Thread):
         name, command = [i for i in self.sock.recv(2048).decode('utf-8').split('\n')]
         print(name, command)
         self.name = name
-        init(name)
+        ack = init(name)
+        self.sock.send(str.encode('0'))
         # welcome_user(self.addr[0], self.addr[1], self.name)
         # print("Hi, %s!" % self.name)
         # TODO all command receiving should be here
@@ -132,9 +133,8 @@ if __name__ == "__main__":
     except IOError:
         tree = create_root()
     root = tree.getroot()
-    # el = init("abraham")
+    # el = root.findall('.//*[@name="This is hay"]')
     # print(el)
-    root.findall("")
 
     sock.listen()
     while True:
