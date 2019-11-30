@@ -40,6 +40,17 @@ def get_file(user, path: str):
     return node.find('./f[@name="%s"]' % path[file_begins_at+1:]) if node is not None else None
 
 
+def init(user):
+    user_node = get_node(user, "")
+    if user_node is not None:
+        root.remove(user_node)
+    user_node = ET.SubElement(root, 'user')
+    user_node.set('name', user)
+    tree.write(root_filename)
+    return True
+
+
+# TODO return codes? like done, already exists, no such pathway
 def make_dir(user, path):
     cut_path, new_dir_begins_at = get_last_node_split(path)
     new_dir = path[new_dir_begins_at+1:]
@@ -95,9 +106,12 @@ class ClientListener(Thread):
         print(self.name + ' disconnected.')
 
     def run(self):
-        self.name = self.sock.recv(1024).decode("utf-8")
+        name, command = [i for i in self.sock.recv(2048).decode('utf-8').split('\n')]
+        print(name, command)
+        self.name = name
+        init(name)
         # welcome_user(self.addr[0], self.addr[1], self.name)
-        print("Hi, %s!" % self.name)
+        # print("Hi, %s!" % self.name)
         # TODO all command receiving should be here
         self._close()
 
@@ -118,8 +132,9 @@ if __name__ == "__main__":
     except IOError:
         tree = create_root()
     root = tree.getroot()
-    el = list_dir("mydude", "Movies")
-    print(el)
+    # el = init("abraham")
+    # print(el)
+    root.findall("")
 
     sock.listen()
     while True:

@@ -39,13 +39,20 @@ def error_arg_len(expected_len):
 
 def connect():
     sock.connect((server_ip, port))
-    sock.send(str.encode(user, 'utf-8'))
-    print("Connection established.")  # test
+    # sock.send(str.encode(user, 'utf-8'))
+    # print("Connection established.")  # test
 
 
 def close():
     # sock.shutdown(how=socket.SHUT_RDWR)
     sock.close()
+
+
+def init():
+    connect()
+    sock.sendall(str.encode("\n".join([user, 'init'])))
+
+    close()
 
 
 if __name__ == "__main__":
@@ -58,11 +65,11 @@ if __name__ == "__main__":
     server_ip = 'localhost'  # TODO
     port = 8800
     sock = socket.socket()
-    connect()  # test
+    # connect()  # test
 
     current_dir = ""
     while True:
-        command = input(user + '/' + current_dir + '> ')
+        command = input(user + current_dir + '> ')
         args = command.split()
         c = args[0]
         args = args[1:]
@@ -75,7 +82,7 @@ if __name__ == "__main__":
             break
 
         elif c == 'init':
-
+            init()
             print("Initialized a new system.")
         elif c == 'c':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
