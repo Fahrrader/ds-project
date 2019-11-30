@@ -101,7 +101,7 @@ def recv_storage(args, storage_ip, storage_port):
 if __name__ == "__main__":
     user = "Unknown"
     while True:
-        user = input("Welcome! State your username in order to access the file sharing system: ")
+        user = input("Welcome! State your username in order to access the file sharing system: ").strip()
         if not error_forbidden_symbols(user):
             break
 
@@ -244,7 +244,9 @@ if __name__ == "__main__":
 
         elif c == 'ls':
             res = send_recv_name_server([user, 'ls', current_dir])
-            if len(res[0]) == 1:
+            if not res:
+                print("This directory is empty.")
+            elif len(res[0]) == 1:
                 print(res)
             else:
                 for i in res:
@@ -260,13 +262,12 @@ if __name__ == "__main__":
         elif c == 'dd':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
-            res = send_recv_name_server([user, 'dd', current_dir + '\\' + args[0]])
+            res = send_recv_name_server([user, 'dd', current_dir + '\\' + args[0], '0'])
             if res == '9':
                 while res != 'y' and res != 'n' and res != '':
-                    res = input('The directory is not empty. Do you want to proceed? (Y/n)').lower()
-                    print(res)
+                    res = input('The directory is not empty. Do you want to proceed? (Y/n)').strip().lower()
                 if res == 'y' or res == '':
-                    send_recv_name_server([user, 'dd', current_dir + '\\' + args[0]])
+                    res = send_recv_name_server([user, 'dd', current_dir + '\\' + args[0], 'y'])
             if res == '1':
                 continue
             elif res == '2':

@@ -56,13 +56,11 @@ def delete_dir(user, path):
     deleted = node.find('./d[@name="%s"]' % del_dir)
     if deleted is None:
         return '2'
-    confirm = '1'
     for _ in deleted:
-        confirm = '9'
-    """node.remove(deleted)
+        return '9'
+    node.remove(deleted)
     tree.write(root_filename)
-    return '1'"""
-    return confirm
+    return '1'
 
 
 def finally_delete_dir(user, path):
@@ -258,7 +256,7 @@ class ClientListener(Thread):
             # to send back [storage_ip, storage_port, file_name]
         elif command == 'd':
             res = delete_file(name, args[2])
-            #aswer 0 if an error, 1 if okay, 2 if no such file
+            # answer 0 if an error, 1 if okay, 2 if no such file
         elif command == 'i':
             res = get_file_info(name, args[2])
         elif command == 'cp':
@@ -272,18 +270,11 @@ class ClientListener(Thread):
         elif command == 'md':
             res = make_dir(name, args[2])
         elif command == 'dd':
-            res = delete_dir(name, args[2])
+            if args[3] == '0':
+                res = delete_dir(name, args[2])
+            elif args[3] == 'y':
+                res = finally_delete_dir(name, args[2])
         self.sock.sendall(str.encode("\n".join(res)))
-
-        if res == '9':
-            args = self.sock.recv(4096).decode('utf-8').split('\n')
-            if args[0] == name and args[1] == command:
-                res = finally_delete_dir(args[0], args[2])
-                self.sock.sendall(str.encode("\n".join(res)))
-
-        # welcome_user(self.addr[0], self.addr[1], self.name)
-        # print("Hi, %s!" % self.name)
-        # TODO all command receiving should be here
         self._close()
 
 
