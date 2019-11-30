@@ -252,10 +252,13 @@ class ClientListener(Thread):
             res = create_file(name, args[2])
         elif command == 'r':
             res = read_file(name, args[2])
+            # to send back [storage_ip, storage_port, file_name]
         elif command == 'w':
             res = write_file(name, args[2])
+            # to send back [storage_ip, storage_port, file_name]
         elif command == 'd':
             res = delete_file(name, args[2])
+            #aswer 0 if an error, 1 if okay, 2 if no such file
         elif command == 'i':
             res = get_file_info(name, args[2])
         elif command == 'cp':

@@ -12,13 +12,15 @@ def replicate(file_name):
     for storage_info in storage_list:
         send_update_to_storage(file_name, storage_info[0], storage_info[1])
 
+
 def send_update_to_storage(file_name, storage_port, storage_ip):
     sock = socket.socket()
     sock.connect((storage_ip, storage_port))
     sock.sendall(str.encode("\n".join(['w', file_name])))
     result = sock.recv(2048).decode('utf-8').split('\n')
     if result == '1':
-        print ("The file has been successfully replicated.")
+        print("The file has been successfully replicated.")
+
 
 def delete_file(file_name):
     pass
@@ -28,8 +30,13 @@ def create_file(file_name):
     pass
 
 
-def edit_file(file_name):
-    pass
+def edit_file(file_name, new_data):
+    try:
+        f = open(file_name)
+        f.write(new_data)
+        res = '1'
+    except:
+        res = '0'
 
 
 class clientListener(Thread):
@@ -56,11 +63,12 @@ class clientListener(Thread):
         elif command == 'w':
             file_name = args[0]
             data = args[1:]
-            f = open(file_name)
+            res = edit_file(file_name, data)
+            replicate(file_name)
 
 
         elif command == 'd':
-            pass
+            file_name = args[0]
 
         elif command == 'replicate':
             pass
