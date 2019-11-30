@@ -49,11 +49,21 @@ def close():
 
 
 def send(args):
-    connect()
+    sock = socket.socket()
+    sock.connect((server_ip, port))
     sock.sendall(str.encode("\n".join(args)))
     ack = sock.recv(1024).decode('utf-8')
-    close()
+    sock.close()
     return ack
+
+
+def send1(args):
+    sock = socket.socket()
+    sock.connect((server_ip, port))
+    sock.sendall(str.encode("\n".join(args)))
+    res = sock.recv(2048).decode('utf-8').split('\n')
+    sock.close()
+    return res
 
 
 if __name__ == "__main__":
@@ -65,9 +75,7 @@ if __name__ == "__main__":
 
     server_ip = 'localhost'  # TODO
     port = 8800
-    sock = socket.socket()
     # connect()  # test
-
     current_dir = ""
     while True:
         command = input(user + current_dir + '> ')
@@ -77,14 +85,13 @@ if __name__ == "__main__":
         if c == 'help':
             show_help()
         if c == 'exit' or c == 'quit' or c == 'e' or c == 'q' or c == 'x' or c == 'close':
-            close()
             print('bye-bye')
             sleep(0.1)
             break
 
         elif c == 'init':
             ack = send([user, 'init'])
-            if ack == 0:
+            if ack == '0':
                 print("Initialized a new system.")
             else:
                 print("Error while initializing a new system.")
@@ -122,13 +129,10 @@ if __name__ == "__main__":
             # TODO set current_dir to new after all
             # current_dir = current_dir + '\\' + args[0]  # path.join(current_dir, args[0])
         elif c == 'ls':
-            if error_arg_len(expected_len=1):
-                continue
-
+            print(send1([user, 'ls', current_dir]))
         elif c == 'md':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
-            # TODO put restrictions on names (\|/"*':<>) and empty
-
+            print(send([user, 'md', current_dir + '\\' + args[0]]))
         else:
             print("Unrecognized. Try 'help' if in doubt.")

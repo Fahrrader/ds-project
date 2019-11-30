@@ -23,7 +23,6 @@ def get_node(user, path):
     if path.strip() != "":
         for d in path.split('\\'):
             xml_path += '/d[@name="%s"]' % d
-    print(xml_path)
     return root.find(xml_path)
     # return root.find('./%s/%s' % (user, path))
 
@@ -40,28 +39,19 @@ def get_file(user, path: str):
     return node.find('./f[@name="%s"]' % path[file_begins_at+1:]) if node is not None else None
 
 
-def init(user):
-    user_node = get_node(user, "")
-    if user_node is not None:
-        root.remove(user_node)
-    user_node = ET.SubElement(root, 'user')
-    user_node.set('name', user)
-    tree.write(root_filename)
-    return True
-
-
 # TODO return codes? like done, already exists, no such pathway
 def make_dir(user, path):
     cut_path, new_dir_begins_at = get_last_node_split(path)
     new_dir = path[new_dir_begins_at+1:]
     node = get_node(user, cut_path)
-    print(node)
-    if node is None or node.find('./d[@name="%s"]' % new_dir) is not None:
-        return False
+    if node is None:
+        return '-1'
+    if node.find('./d[@name="%s"]' % new_dir) is not None:
+        return '1'
     dir_node = ET.SubElement(node, 'd')
     dir_node.set('name', new_dir)
     tree.write(root_filename)
-    return True
+    return '0'
 
 
 def delete_dir(user, path):
@@ -89,11 +79,24 @@ def list_dir(user, path):
         return None
     listed = []
     for el in node:
-        listed.append((el.attrib["name"], el.tag))
+        listed.append(el.tag + ': ' + el.attrib["name"])
     return listed
 
 
-class clientListener(Thread):
+def init(user):
+    user_node = get_node(user, "")
+    if user_node is not None:
+        root.remove(user_node)
+    user_node = ET.SubElement(root, 'user')
+    user_node.set('name', user)
+    tree.write(root_filename)
+    return '0'
+
+
+# def create_file(user, path):
+
+
+class ClientListener(Thread):
     def __init__(self, sock: socket.socket):
         super().__init__(daemon=True)
         self.sock = sock
@@ -106,23 +109,26 @@ class clientListener(Thread):
         print(self.name + ' disconnected.')
 
     def run(self):
-        name, command = [i for i in self.sock.recv(2048).decode('utf-8').split('\n')]
+        # name, command = [i for i in self.sock.recv(2048).decode('utf-8').split('\n')]
+        args = self.sock.recv(2048).decode('utf-8').split('\n')
+        name = args[0]
+        command = args[1]
         print(name, command)
         self.name = name
 
         if command == 'init':
-            ack = init(name)
-            self.sock.send(str.encode('0'))
+            res = init(name)
+            self.sock.send(str.encode(res))
         elif command == 'c':
             pass
-
         elif command == 'r':
             pass
 
         elif command == 'w':
             pass
 
-        elif command == 'di':
+        elif command == 'd':
+            # TODO func for both files and directories
             pass
 
         elif command == 'i':
@@ -131,14 +137,18 @@ class clientListener(Thread):
         elif command == 'cp':
             pass
 
-        elif command == 'mw':
+        elif command == 'mv':
             pass
 
-        elif command == 'lc':
+        elif command == 'cd':
             pass
 
+        elif command == 'ls':
+            res = list_dir(name, args[2])
+            self.sock.sendall(str.encode("\n".join(res)))
         elif command == 'md':
-            pass
+            res = make_dir(name, args[2])
+            self.sock.send(str.encode(res))
             
         # welcome_user(self.addr[0], self.addr[1], self.name)
         # print("Hi, %s!" % self.name)
