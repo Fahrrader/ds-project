@@ -38,21 +38,6 @@ def error_arg_len(expected_len):
         return True
 
 
-def connect_name_server():
-    sock_name_server.connect((server_ip, port))
-    # sock.send_recv_name_server(str.encode(user, 'utf-8'))
-    # print("Connection established.")  # test
-
-
-def connect_storage(storage_ip, port):
-    sock_storage.connect((storage_ip, port))
-
-
-def close():
-    # sock.shutdown(how=socket.SHUT_RDWR)
-    sock_name_server.close()
-
-
 def send_recv_name_server(args):
     sock = socket.socket()
     sock.connect((server_ip, port))
@@ -65,12 +50,32 @@ def send_recv_name_server(args):
     sock.close()
     return res
 
+def send_storage(args, storage_ip, storage_port):
+    #in cases we just send something to the storage server to store
+    sock = socket.socket()
+    sock.connect((storage_ip, storage_port))
+    #connected storage server
+    sock.sendall(str.encode("\n".join(args)))
+    res = sock.recv(2048).decode('utf-8').split('\n')
+    sock.close()
+    # kinda ack to know if everything is ok
+    return res[0]
 
-def send_recv_storage(args, storage_ip, storage_port):
-    connect_storage(storage_ip, storage_port)
-    sock_storage.sendall(str.encode("\n".join(args)))
-    # TODO file receiving
-    sock_storage.close()
+def recv_storage(args, storage_ip, storage_port):
+    #for cases when we recieve a file from the server
+    sock = socket.socket()
+    sock.connect((storage_ip, storage_port))
+    # connected storage server
+    f = open(args[1])
+    data = sock.recv(1024)
+    sock.close()
+    if not data:
+        f.close()
+    else:
+        f.write(data)
+        f.close()
+    return '1'
+
 
 
 if __name__ == "__main__":
@@ -112,14 +117,11 @@ if __name__ == "__main__":
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
             ack = send_recv_name_server([user, 'c', current_dir + '/%s' % args[0]])
-            # 1 - everything is ok
-            # 2 - file already exist
-            # 0 - error
-            if ack == '1':
+            if ack == "1":
                 print('A new file %s has been successfully created.' %args[0])
-            elif ack == '2':
+            elif ack == "2":
                 print('File %s already exists in this directory.' %args[0])
-            elif ack == '0':
+            elif ack == "0":
                 print('Error while creating a new file.')
 
 
@@ -129,12 +131,29 @@ if __name__ == "__main__":
             ack = send_recv_name_server([user, 'r', current_dir + '/%s' % args[0]])
             storage_ip = ack[0]
             storage_port = ack[1]
+            ack  = recv_storage(['r', current_dir + '/%s' % args[0]])
+            if ack == '1':
+                f = open(args[0])
+                #TODO собственно читать файл
+            else:
+                print("Some error has occured.")
 
 
 
         elif c == 'w':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
+            ack = send_recv_name_server([user, 'r', current_dir + '/%s' % args[0]])
+            storage_ip = ack[0]
+            storage_port = ack[1]
+            f = open(args[0])
+            l = f.read()
+            ack = send_storage(args, storage_ip, storage_port)
+            if ack == '1':
+                print("The file has been successfully writen.")
+            else:
+                print("Some error has occured.")
+
 
         elif c == 'd':
             if error_arg_len(expected_len=1):
@@ -145,7 +164,7 @@ if __name__ == "__main__":
             elif ack == 2:
                 print('There is no such file or directory in the current directory.')
             else:
-                print('Error while deleting.')
+                print("Some error has occured.")
 
         elif c == 'i':
             if error_arg_len(expected_len=1):
