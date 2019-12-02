@@ -1,7 +1,8 @@
+import sys
 import os
+import socket
 import webbrowser
 from time import sleep
-import socket
 
 
 def show_help():
@@ -69,33 +70,50 @@ def send_recv_name_server(args):
     return res
 
 
-def send_storage(args, storage_ip, storage_port):
-    # in cases we just send something to the storage server to store
+def send_storage(file_name, file_id, storage_ip):
     sock = socket.socket()
-    sock.connect((storage_ip, storage_port))
+    sock.connect((storage_ip, port))
     # connected storage server
-    sock.sendall(str.encode("\n".join(args)))
-    res = sock.recv(2048).decode('utf-8').split('\n')
-    sock.close()
-    # kinda ack to know if everything is ok
-    return res[0]
+    sock.sendall(str.encode("\n".join(['w', file_id])))
+
+    res = '0'
+    try:
+        # sock = socket.socket()
+        # sock.connect((storage_ip, storage_port))
+        # TODO must send size!
+        sent = 0
+        percent = 0
+        with open(storage_name + '/' + file_name, 'rb') as f:
+            l = f.read(chunk_size)
+            while l:
+                sock.send(l)
+                sent += chunk_size
+                l = f.read(chunk_size)
+        # sock.sendall(str.encode("\n".join([sent, percent, l])))
+        # res = sock.recv(2048).decode('utf-8').split('\n')
+        sock.close()
+        res = '1'
+    except:
+        print("Something went wrong with transmitting.")
+        # todo listen and accept again
+    return res
 
 
-def recv_storage(args, storage_ip, storage_port):
+def recv_storage(file_name, file_id, storage_ip):
     # for cases when we receive a file from the server
     sock = socket.socket()
-    sock.connect((storage_ip, storage_port))
+    sock.connect((storage_ip, port))
     # connected storage server
-    sock.sendall(str.encode("\n".join(args)))
-    f = open(args[1])
-    data = sock.recv(1024)
-    sock.close()
-    if not data:
-        f.close()
-    else:
-        f.write(data)
-        f.close()
-    return '1'
+    sock.sendall(str.encode("\n".join(['r', file_id])))
+    # todo get size here
+    with open(storage_name + '/' + file_name, 'wb') as f:
+        while True:
+            data = sock.recv(chunk_size)
+            if not data:
+                # TODO check size now! if not, return 'fail'
+                sock.close()
+                return '1'
+            f.write(data)
 
 
 if __name__ == "__main__":
@@ -105,12 +123,21 @@ if __name__ == "__main__":
         if not error_forbidden_symbols(user):
             break
 
-    server_ip = 'localhost'  # TODO
+    if len(sys.argv) > 1:
+        server_ip = sys.argv[1]
+    else:
+        server_ip = 'localhost'  # TODO
     port = 12607
     sock_name_server = socket.socket()
     sock_storage = socket.socket()
+    chunk_size = 1024
     # connect_name_server()  # test
 
+    storage_name = 'storage'
+    try:
+        os.mkdir(storage_name)
+    except FileExistsError:
+        pass
     current_dir = ""
     while True:
         command = input(user + ('\\' + current_dir if current_dir != "" else current_dir) + '> ')
@@ -138,38 +165,38 @@ if __name__ == "__main__":
         elif c == 'c':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
-            ack = send_recv_name_server([user, 'c', current_dir + '\\' + args[0]])
-            if ack == "1":
+            res = send_recv_name_server([user, 'c', current_dir + '\\' + args[0]])
+            if res == "1":
                 print('New file %s has been successfully created.' % args[0])
-            elif ack == "2":
+            elif res == "2":
                 print('File %s already exists in this directory.' % args[0])
-            elif ack == "0":
+            elif res == "0":
                 print("Sorcery! It didn't work.")
 
         elif c == 'r':
             if error_arg_len(expected_len=1):
                 continue
-            ack = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
-            storage_ip = ack[0]
-            storage_port = ack[1]
-            file_name = ack[2]
-            result = recv_storage(['r', file_name], storage_ip, storage_port)
+            res = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
+            """storage_ip = res[0]
+            storage_port = res[1]
+            file_id = res[2]"""
+            result = recv_storage(args[0], res[1], res[0])
             if result == '1':
-                webbrowser.open(file_name)
+                webbrowser.open(storage_name + '/' + args[0])
             else:
                 print("Sorcery! It didn't work.")
 
         elif c == 'w':
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
-            ack = send_recv_name_server([user, 'w', current_dir + '\\' + args[0]])
-            storage_ip = ack[0]
-            storage_port = ack[1]
-            file_name = ack[2]
-            f = open(args[0])
-            data = f.read()
-            ack = send_storage(['w', file_name, data], storage_ip, storage_port)
-            if ack == '1':
+            res = send_recv_name_server([user, 'w', current_dir + '\\' + args[0]])
+            # storage_ip = res[0]
+            # storage_port = res[1]
+            # file_name = res[2]
+            # f = open(args[0])
+            # data = f.read()
+            res = send_storage(args[0], res[1], res[0])
+            if res == '1':
                 print("The file has been successfully writen.")
             else:
                 print("Sorcery! It didn't work.")

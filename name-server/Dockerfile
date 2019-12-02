@@ -8,6 +8,5 @@ WORKDIR /app
 # Copy files from project dir into container’s folder
 COPY ./ /app
 # Specify port that could(!) be opened from container later
-#EXPOSE 80
-
-#CMD python3 name_server.py
+EXPOSE 12607 19609
+# CMD python3 name_server.py

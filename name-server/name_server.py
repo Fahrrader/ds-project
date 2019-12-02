@@ -181,7 +181,7 @@ def read_file(user, path):
     if file is None:
         return '2'
     # TODO return IP, id
-    return
+    return ['localhost', 'asbcbrw']
 
 
 def write_file(user, path):
@@ -191,6 +191,7 @@ def write_file(user, path):
     if file is None:
         return '2'
     # TODO return IP, id
+
     # wait for ack from bank
     file.set('modified', str(datetime.datetime.now()))
     file.set('size', '0')  # change
@@ -236,7 +237,6 @@ class ClientListener(Thread):
         print(self.name + ' disconnected.')
 
     def run(self):
-        # name, command = [i for i in self.sock.recv(2048).decode('utf-8').split('\n')]
         args = self.sock.recv(4096).decode('utf-8').split('\n')
         name = args[0]
         command = args[1]
@@ -278,16 +278,81 @@ class ClientListener(Thread):
         self._close()
 
 
+class Heartbeat(Thread):
+    def __init__(self, sock, addr):
+        super().__init__(daemon=True)
+        self.sock = sock
+        self.sock.settimeout(heart_stop_time)
+        self.addr = addr
+        self.is_alive = True
+        self.time_since_beat = time.time()
+
+    def _close(self):
+        # self.sock.shutdown(how=socket.SHUT_RDWR)
+        if self.is_alive:
+            self.is_alive = False
+            del banks[self.addr]
+            self.sock.close()
+            print('Bank %s disconnected.' % self.addr)
+
+    def run(self):
+        try:
+            while self.is_alive:
+                args = ['']
+                try:
+                    args = self.sock.recv(1024).decode('utf-8').split('\n')
+                except socket.error:
+                    pass
+                # if time.time() - heart_stop_time > self.time_since_beat:
+                message = args[0]
+                if message == '1':
+                    pass
+                    # print("%s says hi." % self.addr)
+                elif message == 'hello':
+                    print("%s says hello." % self.addr)
+                elif message == 'r':
+                    pass
+                    # todo some replica stuff
+                elif self.time_since_beat + heart_stop_time < time.time():
+                    self._close()
+                if message != '':
+                    self.time_since_beat = time.time()
+            self._close()
+        except:
+            self._close()
+
+
+class BankHandler(Thread):
+    def __init__(self):
+        super().__init__(daemon=True)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.bind((host, storage_port))
+        self.sock.listen()
+
+    def run(self):
+        self.sock.listen()
+        while True:
+            con, addr = self.sock.accept()
+            addr = addr[0]
+            print(addr)
+            banks[addr] = Heartbeat(con, addr)
+            banks[addr].start()
+
+
 if __name__ == "__main__":
     host = ''
-    port = 8800
+    storage_port = 19609
+    guest_port = 12607
     root_filename = 'root.xml'
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind((host, port))
+    sock.bind((host, guest_port))
 
-    banks = []
-    # TODO find/lift banks?
+    banks = {}
+    heart_stop_time = 3
+    BankHandler().start()
+    # TODO find/lift banks? with swarm
+
     try:
         tree = ET.parse(root_filename)
     except IOError:

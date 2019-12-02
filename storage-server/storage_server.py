@@ -1,47 +1,86 @@
+import sys
 import os
 import socket
+from shutil import rmtree
 from threading import Thread
 from time import sleep
 
 
-def initialize_replica(file_name):
+def init():
+    try:
+        rmtree(storage_name)
+    except IOError:
+        pass
+    os.mkdir(storage_name)
+    return '1'
+
+
+def confirm_write(file_name, sender_ip):
     sock = socket.socket()
     sock.connect((name_server_ip, name_server_port))
-    sock.sendall(str.encode("\n".join(['replicate', file_name])))
+    sock.sendall(str.encode("\n".join(['r', file_name, sender_ip])))
     sock.close()
 
 
-def replicate(file_name, storage_list):
+"""def replicate(file_name, storage_list):
     for storage_info in storage_list:
-        send_update_to_storage(file_name, storage_info[0], storage_info[1])
+        send_update_to_storage(file_name, storage_info[0], storage_info[1])"""
 
 
-def send_update_to_storage(file_name, storage_port, storage_ip):
-    sock = socket.socket()
-    sock.connect((storage_ip, storage_port))
-    sock.sendall(str.encode("\n".join(['w', file_name])))
-    result = sock.recv(2048).decode('utf-8').split('\n')
-    if result == '1':
-        print("The file has been successfully replicated.")
-
-
-def create_file(file_name):
-    pass
-
-
-def edit_file(file_name, new_data):
+def send_file(file_name, sock):
+    res = '0'
     try:
-        f = open(file_name)
-        f.write(new_data)
+        # sock = socket.socket()
+        # sock.connect((storage_ip, storage_port))
+        # TODO must send size!
+        sent = 0
+        percent = 0
+        with open(storage_name + '/' + file_name, 'rb') as f:
+            l = f.read(chunk_size)
+            while l:
+                sock.send(l)
+                sent += chunk_size
+                l = f.read(chunk_size)
+        # sock.sendall(str.encode("\n".join([sent, percent, l])))
+        # res = sock.recv(2048).decode('utf-8').split('\n')
         res = '1'
     except:
-        res = '0'
+        print("something went wrong with transmitting")
+        # todo listen and accept again
+    return res
 
 
-class clientListener(Thread):
-    def __init__(self, sock: socket.socket):
+def write_file(file_name, sock):
+    with open(storage_name + '/' + file_name, 'wb') as f:
+        while True:
+            data = sock.recv(chunk_size)
+            if not data:
+                # TODO check size now!
+                return '1'
+            f.write(data)
+
+
+def create(file_name):
+    try:
+        open(storage_name + '/' + file_name, 'w')
+        return '1'
+    except IOError:
+        return '0'
+
+
+def delete(file_name):
+    try:
+        os.remove(file_name)
+        return '1'
+    except IOError:
+        return '0'
+
+
+class ClientListener(Thread):
+    def __init__(self, sock: socket.socket, addr):
         super().__init__(daemon=True)
         self.sock = sock
+        self.addr = addr
 
     def _close(self):
         # users.remove(self.sock)
@@ -53,72 +92,85 @@ class clientListener(Thread):
         command = self.sock.recv(2048).decode('utf-8').split('\n')
         args = command[1:]
         command = command[0]
-        res = ''
+        res = '0'
+        try:
+            if command == 'c':
+                res = create(args[0])
+                confirm_write(args[0], addr[0])
 
-        if command == 'r':
-            file_name = args[0]
-            f = open(file_name)
-            data = f.read()
-            res = data
+            elif command == 'r':
+                res = send_file(args[0], self.sock)
+                """f = open(file_name)
+                data = f.read()
+                res = data"""
 
-        elif command == 'w':
-            file_name = args[0]
-            data = args[1:]
-            res = edit_file(file_name, data)
-            initialize_replica(file_name)
+            elif command == 'w':
+                res = write_file(args[0], self.sock)
+                # initialize_replica(file_name)
+                self.sock.sendall(str.encode("\n".join(res)))
+                confirm_write(args[0], addr[0])
 
+            elif command == 'd':
+                res = delete(args[0])
+                self.sock.sendall(str.encode("\n".join(res)))
 
-        elif command == 'd':
-            file_name = args[0]
-            path = os.path.join(os.path.abspath(os.path.dirname(__file__)), file_name)
-            os.remove(path)
-            res = '1'
+            """elif command == 'replicate':
+                file_name = args[0]
+                storage_info = args[1:]
+                replicate(file_name, storage_info)
+                res = 1"""
+        except:
+            self.sock.sendall(str.encode("\n".join(res)))
 
-        elif command == 'replicate':
-            file_name = args[0]
-            storage_info = args[1:]
-            replicate(file_name, storage_info)
-            res = 1
-
-        self.sock.sendall(str.encode("\n".join(res)))
         self._close()
 
 
-class heartbeat(Thread):
-    def __init__(self, sock: socket.socket):
+class Heart(Thread):
+    def __init__(self):
         super().__init__(daemon=True)
-        self.sock = sock
-        self.name = ""
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.is_alive = True
+        self.heartbeat_time = 2
+        self.sock.settimeout(self.heartbeat_time + 1)
 
     def _close(self):
-        # users.remove(self.sock)
         # self.sock.shutdown(how=socket.SHUT_RDWR)
         self.sock.close()
-        print(self.name + ' disconnected.')
 
     def run(self):
-        sleep(1)
-        sock = socket.socket()
-        sock.connect((name_server_port, name_server_port))
-        sock.sendall(str.encode("1"))
+        try:
+            self.sock.connect((name_server_ip, name_server_port))
+            self.sock.send(str.encode('hello'))
+            while True:
+                sleep(self.heartbeat_time)
+                self.sock.send(str.encode("1"))
+        except:
+            self.is_alive = False
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, guest_port))
+            self._close()
 
 
 if __name__ == "__main__":
-    name_server_ip = 'localhost'  # TODO
-    name_server_port = 9000
+    if len(sys.argv) > 1:
+        name_server_ip = sys.argv[1]
+    else:
+        name_server_ip = 'localhost'  # TODO
+    name_server_port = 19609
+    guest_port = 12607
     host = ''
-    guest_port = 8800
+    storage_name = 'storage'
+    chunk_size = 1024
 
+    heart = Heart()
+    heart.start()
 
-    name_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    name_sock.bind((host, guest_port))
-    # heartbeat(con).start()
+    init()
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind((host, guest_port))
 
     sock.listen()
-    while True:
+    while heart.is_alive:
         con, addr = sock.accept()
         # start new thread for user
-        clientListener(con).start()
+        ClientListener(con, addr).start()
