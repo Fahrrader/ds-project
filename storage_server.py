@@ -25,10 +25,6 @@ def send_update_to_storage(file_name, storage_port, storage_ip):
         print("The file has been successfully replicated.")
 
 
-def create_file(file_name):
-    pass
-
-
 def edit_file(file_name, new_data):
     try:
         f = open(file_name)
