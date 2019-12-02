@@ -157,7 +157,7 @@ def get_banks_for_possession(banks_already):
 
 
 def replica_number():
-    return max(int(len(banks) / 3), 2) - 1
+    return max(int(len(banks) / 3), 2) - 1 if len(banks) > 1 else len(banks)
 
 
 def init(user):
