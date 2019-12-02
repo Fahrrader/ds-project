@@ -115,3 +115,7 @@ dmypy.json
 
 .idea/
 *.xml
+
+storage-server/storage/
+name-server/storage/
+client/storage/

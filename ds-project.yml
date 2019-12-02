@@ -1,0 +1,13 @@
+version: "3.3"
+services:
+  naming:
+    image: fahrrader/ds-project-name-server
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+  storage:
+    image: fahrrader/ds-project-storage-server
+    deploy:
+      replicas: 10
+      restart_policy:
+        condition: on-failure

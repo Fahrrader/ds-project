@@ -2,8 +2,8 @@ version: '3.3'
 services:
   app:
     #build: . # build from Dockerfile
-    image: fahrrader/ds-project-name-server
-    command: python3 name_server.py # command to start container=name_server.py  # storage_server.py
+    image: fahrrader/ds-project-client
+    command: python3 client.py # command to start container=name_server.py  # storage_server.py
     #ports:
       #- 12607:12607 # host : container
       #- 19609:19609
