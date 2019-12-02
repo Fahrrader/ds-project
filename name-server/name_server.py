@@ -170,7 +170,6 @@ def init(user):
 
 
 def create_file(user, path):
-    print('you tried.')
     file, node = get_file(user, path)
     if node is None:
         return '0'
@@ -183,12 +182,12 @@ def create_file(user, path):
         elements = root.findall('.//*[@id="%s"]' % new_id)
 
     bank = banks[choices(list(banks.keys()))[0]]
-    print(bank)
     sock = socket.socket()
     sock.settimeout(heart_stop_time * 2)
     try:
         sock.connect((bank, storage_port))
         sock.sendall(str.encode("\n".join(['c', new_id])))
+        sock.close()
     except ConnectionRefusedError:
         print("The service is currently unavailable.")
         sock.close()
@@ -271,6 +270,7 @@ def delete_file(user, path, file=None, node=None):
         try:
             sock.connect((bank, storage_port))
             sock.sendall(str.encode("\n".join(['d', bank])))
+            sock.close()
         except ConnectionRefusedError:
             print("The service is currently unavailable.")
             sock.close()
@@ -383,20 +383,20 @@ class Heartbeat(Thread):
         self.sock.settimeout(heart_stop_time)
         self.addr = addr
         self.id = _id
-        self.is_alive = True
+        self._is_alive = True
         self.time_since_beat = time.time()
 
     def _close(self):
         # self.sock.shutdown(how=socket.SHUT_RDWR)
-        if self.is_alive:
-            self.is_alive = False
+        if self._is_alive:
+            self._is_alive = False
             del banks[self.id]
             self.sock.close()
             print('Bank %s disconnected.' % self.addr)
 
     def run(self):
         try:
-            while self.is_alive:
+            while self._is_alive:
                 args = ['']
                 try:
                     args = self.sock.recv(1024).decode('utf-8').split('\n')
