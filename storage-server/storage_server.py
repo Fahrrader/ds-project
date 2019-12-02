@@ -8,10 +8,10 @@ from time import sleep
 
 def init():
     try:
-        rmtree(storage_name)
+        # rmtree(storage_name)  # TODO
+        os.mkdir(storage_name)
     except IOError:
         pass
-    os.mkdir(storage_name)
     return '1'
 
 
@@ -30,33 +30,28 @@ def confirm_write(file_name, sender_ip):
 def send_file(file_name, sock):
     res = '0'
     try:
-        # sock = socket.socket()
-        # sock.connect((storage_ip, storage_port))
-        # TODO must send size!
-        sent = 0
-        percent = 0
         with open(storage_name + '/' + file_name, 'rb') as f:
+            file_size = os.fstat(f.fileno()).st_size
+            sock.send(str.encode(str(file_size), 'utf-8'))
             l = f.read(chunk_size)
             while l:
                 sock.send(l)
-                sent += chunk_size
                 l = f.read(chunk_size)
-        # sock.sendall(str.encode("\n".join([sent, percent, l])))
-        # res = sock.recv(2048).decode('utf-8').split('\n')
         res = '1'
     except:
         print("something went wrong with transmitting")
-        # todo listen and accept again
     return res
 
 
-def write_file(file_name, sock):
+def write_file(file_name, file_size, sock):
     with open(storage_name + '/' + file_name, 'wb') as f:
         while True:
             data = sock.recv(chunk_size)
             if not data:
-                # TODO check size now!
-                return '1'
+                if int(file_size) == os.fstat(f.fileno()).st_size:
+                    return '1'
+                else:
+                    return '0'
             f.write(data)
 
 
@@ -105,7 +100,7 @@ class ClientListener(Thread):
                 res = data"""
 
             elif command == 'w':
-                res = write_file(args[0], self.sock)
+                res = write_file(args[0], args[1], self.sock)
                 # initialize_replica(file_name)
                 self.sock.sendall(str.encode("\n".join(res)))
                 confirm_write(args[0], addr[0])

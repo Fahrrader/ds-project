@@ -8,11 +8,10 @@ from time import sleep
 def show_help():
     print('init         -- to initialize a new repository with this IP address.')
     print('c [filename] -- create an empty file in your directory.')
-    print('r [filename] -- store and open a file from your directory.')  # TODO if read multiple times, replace local
+    print('r [filename] -- store and open a file from your directory.')
     print('w [filename] -- send_recv_name_server a file from your computer to the directory with replacing the old one.')
     print('d [filename] -- delete a file from your directory.')
     print('i [filename] -- display information about a file in your directory.')
-    # TODO if we have time, make rename
     print('cp [filename] [path] -- store a copy of a file in the new path.')
     print('mv [filename] [path] -- store the file in the new path.')
     print('cd [path]    -- change the current directory.')
@@ -57,63 +56,64 @@ def parse_path(current_dir, new_path):
 def send_recv_name_server(args):
     sock = socket.socket()
     sock.settimeout(15)
-    sock.connect((server_ip, port))
-    sock.sendall(str.encode("\n".join(args)))
     try:
-        res = sock.recv(4096).decode('utf-8').split('\n')
-    except socket.error:
-        print("The connection has taken too long and timed out.")
-        return None
-    if len(res) == 1:
-        res = res[0]
+        sock.connect((server_ip, port))
+        sock.sendall(str.encode("\n".join(args)))
+        try:
+            res = sock.recv(4096).decode('utf-8').split('\n')
+        except socket.error:
+            print("The connection has taken too long and timed out.")
+            return None
+        if len(res) == 1:
+            res = res[0]
+    except ConnectionRefusedError:
+        print("The service is currently unavailable.")
+        res = '0'
     sock.close()
     return res
 
 
 def send_storage(file_name, file_id, storage_ip):
     sock = socket.socket()
-    sock.connect((storage_ip, port))
-    # connected storage server
-    sock.sendall(str.encode("\n".join(['w', file_id])))
-
-    res = '0'
     try:
-        # sock = socket.socket()
-        # sock.connect((storage_ip, storage_port))
-        # TODO must send size!
-        sent = 0
-        percent = 0
         with open(storage_name + '/' + file_name, 'rb') as f:
+            file_size = os.fstat(f.fileno()).st_size
+
+            sock.connect((storage_ip, port))
+            sock.sendall(str.encode("\n".join(['w', file_id, str(file_size)])))
+
             l = f.read(chunk_size)
             while l:
                 sock.send(l)
-                sent += chunk_size
                 l = f.read(chunk_size)
-        # sock.sendall(str.encode("\n".join([sent, percent, l])))
-        # res = sock.recv(2048).decode('utf-8').split('\n')
         sock.close()
-        res = '1'
+        return '1'
     except:
         print("Something went wrong with transmitting.")
-        # todo listen and accept again
-    return res
+        return '0'
 
 
 def recv_storage(file_name, file_id, storage_ip):
     # for cases when we receive a file from the server
     sock = socket.socket()
-    sock.connect((storage_ip, port))
-    # connected storage server
-    sock.sendall(str.encode("\n".join(['r', file_id])))
-    # todo get size here
-    with open(storage_name + '/' + file_name, 'wb') as f:
-        while True:
-            data = sock.recv(chunk_size)
-            if not data:
-                # TODO check size now! if not, return 'fail'
-                sock.close()
-                return '1'
-            f.write(data)
+    try:
+        sock.connect((storage_ip, port))
+        # connected storage server
+        sock.sendall(str.encode("\n".join(['r', file_id])))
+        file_size = int(sock.recv(1024))
+        with open(storage_name + '/' + file_name, 'wb') as f:
+            while True:
+                data = sock.recv(chunk_size)
+                if not data:
+                    sock.close()
+                    if file_size == os.fstat(f.fileno()).st_size:
+                        return '1'
+                    else:
+                        return '0'
+                f.write(data)
+    except:
+        print("Something went wrong with transmitting.")
+        return '0'
 
 
 if __name__ == "__main__":
@@ -177,12 +177,12 @@ if __name__ == "__main__":
             if error_arg_len(expected_len=1):
                 continue
             res = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
-            """storage_ip = res[0]
-            storage_port = res[1]
-            file_id = res[2]"""
-            result = recv_storage(args[0], res[1], res[0])
-            if result == '1':
+            if len(res) > 1:
+                res = recv_storage(args[0], res[1], res[0])
+            if res == '1':
                 webbrowser.open(storage_name + '/' + args[0])
+            elif res == '2':
+                print('There is no such file in the current directory.')
             else:
                 print("Sorcery! It didn't work.")
 
@@ -190,12 +190,8 @@ if __name__ == "__main__":
             if error_arg_len(expected_len=1) or error_forbidden_symbols(args[0]):
                 continue
             res = send_recv_name_server([user, 'w', current_dir + '\\' + args[0]])
-            # storage_ip = res[0]
-            # storage_port = res[1]
-            # file_name = res[2]
-            # f = open(args[0])
-            # data = f.read()
-            res = send_storage(args[0], res[1], res[0])
+            if len(res) > 1:
+                res = send_storage(args[0], res[1], res[0])
             if res == '1':
                 print("The file has been successfully writen.")
             else:
@@ -271,7 +267,7 @@ if __name__ == "__main__":
 
         elif c == 'ls':
             res = send_recv_name_server([user, 'ls', current_dir])
-            if not res:
+            if not res or res[0] == '0':
                 print("This directory is empty.")
             elif len(res[0]) == 1:
                 print(res)

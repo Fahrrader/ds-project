@@ -25,7 +25,7 @@ def get_node(user, path):
 
 def get_last_node_split(path: str):
     file_begins_at = path.rfind('\\')
-    return path[:file_begins_at] if file_begins_at != -1 else "", path[file_begins_at+1:]
+    return path[:file_begins_at] if file_begins_at != -1 else "", path[file_begins_at + 1:]
 
 
 def get_file(user, path: str):
@@ -174,29 +174,60 @@ def create_file(user, path):
     return '1'
 
 
+def write_file(user, path):
+    file, node = get_file(user, path)
+    if node is None:
+        return '0'
+    if file is None:
+        # return '2'
+        elements = ['']
+        while elements:
+            file_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
+            elements = root.findall('.//*[@id="%s"]' % file_id)
+    else:
+        file_id = file.get('id')
+    # TODO return IP, id
+
+    if file is None:
+        _, file_name = get_last_node_split(path)
+        file = ET.SubElement(node, 'f', attrib={
+            'id': file_id,
+            'name': file_name,
+            'size': '0',  # something
+            'created': str(datetime.datetime.now()),
+            'modified': str(datetime.datetime.now())
+        })
+
+    # wait for ack from bank
+    file.set('modified', str(datetime.datetime.now()))
+    file.set('size', '0')  # change
+    return '1'
+
+
+def get_bank(text):
+    bank_indices = text.strip().split(',') if text is not None else []
+    if not bank_indices:
+        return '-1'
+    bank = choices(bank_indices)[0]
+    while not (bank in banks):
+        bank = choices(bank_indices)[0]
+    return bank
+
+
 def read_file(user, path):
     file, node = get_file(user, path)
     if node is None:
         return '0'
     if file is None:
         return '2'
-    # TODO return IP, id
-    return ['localhost', 'asbcbrw']
 
-
-def write_file(user, path):
-    file, node = get_file(user, path)
-    if node is None:
-        return '0'
-    if file is None:
+    file_id = file.get('id')
+    bank = get_bank(file.text)
+    if bank == '-1':
+        delete_file(user, path)
         return '2'
-    # TODO return IP, id
 
-    # wait for ack from bank
-    file.set('modified', str(datetime.datetime.now()))
-    file.set('size', '0')  # change
-    # send signal to bank to update all others
-    return '1'
+    return [bank, file_id]
 
 
 def delete_file(user, path):
@@ -244,6 +275,9 @@ class ClientListener(Thread):
         self.name = name
         res = '0'
 
+        # TODO
+        """if not banks.keys():
+            res = '0'"""
         if command == 'init':
             res = init(name)
         elif command == 'c':
@@ -279,11 +313,12 @@ class ClientListener(Thread):
 
 
 class Heartbeat(Thread):
-    def __init__(self, sock, addr):
+    def __init__(self, sock, addr, _id):
         super().__init__(daemon=True)
         self.sock = sock
         self.sock.settimeout(heart_stop_time)
         self.addr = addr
+        self.id = _id
         self.is_alive = True
         self.time_since_beat = time.time()
 
@@ -291,7 +326,7 @@ class Heartbeat(Thread):
         # self.sock.shutdown(how=socket.SHUT_RDWR)
         if self.is_alive:
             self.is_alive = False
-            del banks[self.addr]
+            del banks[self.id]
             self.sock.close()
             print('Bank %s disconnected.' % self.addr)
 
@@ -335,8 +370,9 @@ class BankHandler(Thread):
             con, addr = self.sock.accept()
             addr = addr[0]
             print(addr)
-            banks[addr] = Heartbeat(con, addr)
-            banks[addr].start()
+            banks[banks_index[0]] = Heartbeat(con, addr, banks_index[0])
+            banks[banks_index[0]].start()
+            banks_index[0] += 1
 
 
 if __name__ == "__main__":
@@ -349,9 +385,9 @@ if __name__ == "__main__":
     sock.bind((host, guest_port))
 
     banks = {}
+    banks_index = [0]
     heart_stop_time = 3
     BankHandler().start()
-    # TODO find/lift banks? with swarm
 
     try:
         tree = ET.parse(root_filename)
@@ -359,11 +395,8 @@ if __name__ == "__main__":
         tree = create_root()
         print("Created new root.")
     root = tree.getroot()
-    # el = root.findall('.//*[@name="This is hay"]')
-    # print(el)
 
     sock.listen()
     while True:
         con, addr = sock.accept()
-        # start new thread for user
         ClientListener(con).start()
