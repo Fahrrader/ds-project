@@ -9,7 +9,8 @@ def show_help():
     print('init         -- to initialize a new repository with this IP address.')
     print('c [filename] -- create an empty file in your directory.')
     print('r [filename] -- store and open a file from your directory.')
-    print('w [filename] -- send_recv_name_server a file from your computer to the directory with replacing the old one.')
+    print(
+        'w [filename] -- send_recv_name_server a file from your computer to the directory with replacing the old one.')
     print('d [filename] -- delete a file from your directory.')
     print('i [filename] -- display information about a file in your directory.')
     print('cp [filename] [path] -- store a copy of a file in the new path.')
@@ -126,12 +127,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         server_ip = sys.argv[1]
     else:
-        server_ip = 'localhost'  # TODO
+        server_ip = 'localhost'
     port = 12607
     sock_name_server = socket.socket()
     sock_storage = socket.socket()
     chunk_size = 1024
-    # connect_name_server()  # test
 
     storage_name = 'storage'
     try:

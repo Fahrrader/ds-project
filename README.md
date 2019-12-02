@@ -20,8 +20,9 @@ and `python3 client.py [server IP]`. You can use that with docker machines, for 
     1. Put there the *docker-compose.yml* for the storage server and launch it with `docker service create --replicas 10 --name ds-p fahrrader/ds-project-storage-server python3 storage_server.py [MANAGER-IP]`
     1. Do the same with other worker nodes, if you so desire.
 
-##Architectural diagrams 
-You can find the architectural diagrams of the project by the links below: 
+## Architectural diagrams 
+
+You can find the architectural diagrams of the project by the links below, or inside the *image* folder: 
 
 [The system overall architecture](https://github.com/Fahrrader/ds-project/raw/master/image/Overall_view.png)
 
@@ -30,8 +31,9 @@ You can find the architectural diagrams of the project by the links below:
 [User and naming server communication](https://github.com/Fahrrader/ds-project/raw/master/image/User-naming.png)
 
 
-##Description of communication protocols
-In our project we use TCP/IP protocol. The communication between the servers takes place in 19609 port and between the servers and clients on port 12607.
+## Description of communication protocols
+
+In our project we use TCP/IP protocol. The communication between the servers takes place on port 19609 and between the servers and clients on port 12607.
 
 Using the first one we send and receive commands (such as create, write, delete file, replicate), data (such as servers ips, file names, file data etc.) and pings (aka heartbeats).
 

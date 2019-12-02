@@ -2,7 +2,7 @@ import socket
 import string
 import xml.etree.ElementTree as ET
 from threading import Thread
-from random import choices
+from random import choices, shuffle
 import time
 import datetime
 
@@ -71,8 +71,8 @@ def finally_delete_dir(user, path):
     deleted = node.find('./d[@name="%s"]' % del_dir)
     if deleted is None:
         return '2'
-    # TODO go through every single file in the node, delete
-    # deleted.findall('.//f')
+    for d in deleted.findall('.//f'):
+        delete_file(d, node)
     node.remove(deleted)
     tree.write(root_filename)
     return '1'
@@ -113,7 +113,10 @@ def copy_file(user, path, path2):
     # node2.append(file)
     # tree.write(root_filename)
     _, file = get_last_node_split(path)
-    return create_file(user, path2 + "\\" + file)  # TODO check for problems later, adjust registry
+    res = write_file(user, path2 + "\\" + file)  # TODO check for problems later, adjust registry
+    if res == '0':
+        return res
+
 
 
 def check_for_dir(user, path):
@@ -130,6 +133,31 @@ def list_dir(user, path):
     for el in node:
         listed.append(el.tag + ': ' + el.attrib["name"])
     return listed
+
+
+def get_bank_in_possession(text, k=1):
+    bank_indices = text.strip().split(',') if text is not None else []
+    if not bank_indices:
+        return []
+    if k != 1:
+        return bank_indices
+    bank = choices(bank_indices)[0]
+    while not (bank in banks):
+        bank = choices(bank_indices)[0]
+    return bank
+
+
+def get_banks_for_possession(banks_already):
+    banks_r = list(banks.keys())
+    shuffle(banks_r)
+    banks_r = [bank for bank in banks_r if bank not in banks_already]
+    banks_r = banks_r[:min(replica_number(), banks_r.__len__())]
+    banks_r = [banks[bank].addr for bank in banks_r]
+    return banks_r
+
+
+def replica_number():
+    return max(int(len(banks) / 3), 2) - 1
 
 
 def init(user):
@@ -153,9 +181,23 @@ def create_file(user, path):
     while elements:
         new_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
         elements = root.findall('.//*[@id="%s"]' % new_id)
-    # todo send one of the banks IP (the most free one, perhaps) and the file id
-    # TODO after bank returns signal that the file is uploaded:
-    # file id, size
+
+    bank = choices(banks.keys())[0]
+    print(bank)
+    sock = socket.socket()
+    sock.settimeout(heart_stop_time * 2)
+    try:
+        sock.connect((bank, storage_port))
+        sock.sendall(str.encode("\n".join(['c', new_id])))
+    except ConnectionRefusedError:
+        print("The service is currently unavailable.")
+        sock.close()
+        return '0'
+    except socket.error:
+        print("The connection took too long and timed out.")
+        sock.close()
+        return '0'
+
     cut_path, file_name = get_last_node_split(path)
     file = ET.SubElement(node, 'f', attrib={
         'id': new_id,
@@ -164,12 +206,7 @@ def create_file(user, path):
         'created': str(datetime.datetime.now()),
         'modified': str(datetime.datetime.now())
     })
-    # set text to already replicated server
-    # TODO ping banks with other IPs for it to store the thing
-    # each time update text to new replicated server
-    # each time a server stops responding, find the files from the server,
-    # run through formula and replicate somewhere else if need be
-    # TODO also ping client that the upload is complete
+
     tree.write(root_filename)
     return '1'
 
@@ -179,14 +216,12 @@ def write_file(user, path):
     if node is None:
         return '0'
     if file is None:
-        # return '2'
         elements = ['']
         while elements:
             file_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
             elements = root.findall('.//*[@id="%s"]' % file_id)
     else:
         file_id = file.get('id')
-    # TODO return IP, id
 
     if file is None:
         _, file_name = get_last_node_split(path)
@@ -198,20 +233,9 @@ def write_file(user, path):
             'modified': str(datetime.datetime.now())
         })
 
-    # wait for ack from bank
-    file.set('modified', str(datetime.datetime.now()))
-    file.set('size', '0')  # change
-    return '1'
-
-
-def get_bank(text):
-    bank_indices = text.strip().split(',') if text is not None else []
-    if not bank_indices:
-        return '-1'
-    bank = choices(bank_indices)[0]
-    while not (bank in banks):
-        bank = choices(bank_indices)[0]
-    return bank
+    tree.write(root_filename)
+    banks_p = get_bank_in_possession(file.text, k=-1)
+    return [choices(get_banks_for_possession(banks_p)), file_id]
 
 
 def read_file(user, path):
@@ -222,25 +246,37 @@ def read_file(user, path):
         return '2'
 
     file_id = file.get('id')
-    bank = get_bank(file.text)
-    if bank == '-1':
+    bank = get_bank_in_possession(file.text)
+    if not bank:
         delete_file(user, path)
         return '2'
 
     return [bank, file_id]
 
 
-def delete_file(user, path):
-    file, node = get_file(user, path)
-    if node is None:
-        return '0'
-    if file is None:
-        return '2'
-    bank_indices = file.text.strip().split(',') if file.text is not None else []
-    print(bank_indices)
-    # TODO send to all banks commands to delete
-    file.set('op', 'd')
-    # TODO do the following ONLY AFTER every (functioning) replicant deletes
+def delete_file(user, path, file=None, node=None):
+    if file is None or node is None:
+        file, node = get_file(user, path)
+        if node is None:
+            return '0'
+        if file is None:
+            return '2'
+    bank_indices = get_bank_in_possession(file.text, -1)
+    for bank in bank_indices:
+        sock = socket.socket()
+        sock.settimeout(heart_stop_time * 2)
+        try:
+            sock.connect((bank, storage_port))
+            sock.sendall(str.encode("\n".join(['d', bank])))
+        except ConnectionRefusedError:
+            print("The service is currently unavailable.")
+            sock.close()
+            return '0'
+        except socket.error:
+            print("The connection timed out.")
+            sock.close()
+            return '0'
+
     node.remove(file)
     tree.write(root_filename)
     return '1'
@@ -275,9 +311,8 @@ class ClientListener(Thread):
         self.name = name
         res = '0'
 
-        # TODO
-        """if not banks.keys():
-            res = '0'"""
+        if not banks.keys():
+            res = '0'
         if command == 'init':
             res = init(name)
         elif command == 'c':
@@ -310,6 +345,30 @@ class ClientListener(Thread):
                 res = finally_delete_dir(name, args[2])
         self.sock.sendall(str.encode("\n".join(res)))
         self._close()
+
+
+def set_replica(file_id, file_size, bank_ip, bank_id):
+    file = root.find('.//*[@id="%s"]' % file_id)
+    if file is None:
+        return
+    bank_indices = file.text.strip().split(',') if file.text is not None else []
+    if not bank_indices:
+        bank_ids = get_banks_for_possession([bank_id])
+        sock = socket.socket()
+        sock.settimeout(heart_stop_time * 2)
+        try:
+            sock.connect((bank_ip, storage_port))
+            sock.sendall(str.encode("\n".join(['r', file_id] + bank_ids)))
+        except ConnectionRefusedError:
+            print("The service is currently unavailable.")
+        except socket.error:
+            print("The connection timed out.")
+        sock.close()
+
+    file.set('modified', str(datetime.datetime.now()))
+    file.set('size', file_size)
+    file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + bank_id
+    tree.write(root_filename)
 
 
 class Heartbeat(Thread):
@@ -346,8 +405,7 @@ class Heartbeat(Thread):
                 elif message == 'hello':
                     print("%s says hello." % self.addr)
                 elif message == 'r':
-                    pass
-                    # todo some replica stuff
+                    set_replica(args[1], args[2], self.addr, self.id)
                 elif self.time_since_beat + heart_stop_time < time.time():
                     self._close()
                 if message != '':
@@ -375,6 +433,8 @@ class BankHandler(Thread):
             banks_index[0] += 1
 
 
+# todo make a cleaner to check on bank expiry (get rid of old banks), replica number (adjust, send out afterwards)
+# todo delete files that don't have any more replicas
 if __name__ == "__main__":
     host = ''
     storage_port = 19609
@@ -389,11 +449,11 @@ if __name__ == "__main__":
     heart_stop_time = 3
     BankHandler().start()
 
-    try:
-        tree = ET.parse(root_filename)
-    except IOError:
-        tree = create_root()
-        print("Created new root.")
+    # try:
+        # tree = ET.parse(root_filename)
+    # except IOError:
+    tree = create_root()  # always create root
+    print("Created new root.")
     root = tree.getroot()
 
     sock.listen()

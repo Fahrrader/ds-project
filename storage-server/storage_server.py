@@ -15,10 +15,10 @@ def init():
     return '1'
 
 
-def confirm_write(file_name, sender_ip):
+def confirm_write(file_name, file_size):
     sock = socket.socket()
     sock.connect((name_server_ip, name_server_port))
-    sock.sendall(str.encode("\n".join(['r', file_name, sender_ip])))
+    sock.sendall(str.encode("\n".join(['r', file_name, file_size])))
     sock.close()
 
 
@@ -49,9 +49,9 @@ def write_file(file_name, file_size, sock):
             data = sock.recv(chunk_size)
             if not data:
                 if int(file_size) == os.fstat(f.fileno()).st_size:
-                    return '1'
+                    return '1', file_size
                 else:
-                    return '0'
+                    return '0', file_size
             f.write(data)
 
 
@@ -91,23 +91,24 @@ class ClientListener(Thread):
         try:
             if command == 'c':
                 res = create(args[0])
-                confirm_write(args[0], addr[0])
+                confirm_write(args[0], '0')
 
             elif command == 'r':
-                res = send_file(args[0], self.sock)
+                for _ in args[1:]:
+                    res = send_file(args[0], self.sock)
                 """f = open(file_name)
                 data = f.read()
                 res = data"""
 
             elif command == 'w':
-                res = write_file(args[0], args[1], self.sock)
+                res, f_size = write_file(args[0], args[1], self.sock)
                 # initialize_replica(file_name)
                 self.sock.sendall(str.encode("\n".join(res)))
-                confirm_write(args[0], addr[0])
+                confirm_write(args[0], f_size)
 
             elif command == 'd':
                 res = delete(args[0])
-                self.sock.sendall(str.encode("\n".join(res)))
+                # self.sock.sendall(str.encode("\n".join(res)))
 
             """elif command == 'replicate':
                 file_name = args[0]
