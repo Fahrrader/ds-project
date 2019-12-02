@@ -117,6 +117,7 @@ def recv_storage(file_name, file_id, storage_ip):
 
 
 if __name__ == "__main__":
+    print(''.split(','))
     user = "Unknown"
     while True:
         user = input("Welcome! State your username in order to access the file sharing system: ").strip()

@@ -135,13 +135,14 @@ def list_dir(user, path):
 
 
 def get_bank_in_possession(text, k=1):
-    bank_indices = text.strip().split(',') if text is not None else []
+    bank_indices = text.strip().split(',') if text is not None and text != '' else []
     if not bank_indices:
         return []
     if k != 1:
         return bank_indices
     bank = choices(bank_indices)[0]
     while not (bank in banks):
+        print(bank)
         bank = choices(bank_indices)[0]
     return bank
 
@@ -152,6 +153,7 @@ def get_banks_for_possession(banks_already):
     banks_r = [bank for bank in banks_r if bank not in banks_already]
     banks_r = banks_r[:min(replica_number(), banks_r.__len__())]
     banks_r = [banks[bank].addr for bank in banks_r]
+    print(banks_r)
     return banks_r
 
 
@@ -359,16 +361,17 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
     bank_indices = file.text.strip().split(',') if file.text is not None else []
     if not bank_indices:
         bank_ids = get_banks_for_possession([bank_id])
-        sock = socket.socket()
-        sock.settimeout(heart_stop_time * 2)
-        try:
-            sock.connect((bank_ip, storage_port))
-            sock.sendall(str.encode("\n".join(['r', file_id] + bank_ids)))
-        except ConnectionRefusedError:
-            print("The service is currently unavailable.")
-        except socket.error:
-            print("The connection timed out.")
-        sock.close()
+        if bank_ids:
+            sock = socket.socket()
+            sock.settimeout(heart_stop_time * 2)
+            try:
+                sock.connect((bank_ip, storage_port))
+                sock.sendall(str.encode("\n".join(['r', file_id] + bank_ids)))
+            except ConnectionRefusedError:
+                print("The service is currently unavailable.")
+            except socket.error:
+                print("The connection timed out.")
+            sock.close()
 
     file.set('modified', str(datetime.datetime.now()))
     file.set('size', file_size)
