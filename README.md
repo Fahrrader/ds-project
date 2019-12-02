@@ -1,9 +1,7 @@
 # ds-project: Distributed Systems File Sharing Project
-
 Made by 3rd year students of Innopolis University:
 - Farhad Khakimov, SE-02
 - Oydinoy Zufarova, SE-01
-
 
 ## Installation guide
 
@@ -20,4 +18,4 @@ and `python3 client.py [server IP]`. You can use that with docker machines, for 
     1. Put there the *docker-compose.yml* for the naming server and launch it with `docker service create --replicas 1 --name ds-p fahrrader/ds-project-name-server python3 name_server.py`
     1. Next, for each worker server, place there the *docker-compose.yml* and launch it with the command you've been given after step 1 (naming server).
     1. Put there the *docker-compose.yml* for the storage server and launch it with `docker service create --replicas 10 --name ds-p fahrrader/ds-project-storage-server python3 storage_server.py [MANAGER-IP]`
-    1. Do the same with other worker nodes.
+    1. Do the same with other worker nodes, if you so desire.
