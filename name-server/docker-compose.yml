@@ -1,0 +1,6 @@
+version: '3.3'
+services:
+  app:
+    #build: . # build from Dockerfile
+    image: fahrrader/ds_project
+    command: python3 name_server.py # command to start container=name_server.py  # storage_server.py
