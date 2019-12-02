@@ -8,10 +8,10 @@ from time import sleep
 
 def init():
     try:
-        # rmtree(storage_name)  # TODO
-        os.mkdir(storage_name)
+        rmtree(storage_name)  # todo
     except IOError:
         pass
+    os.mkdir(storage_name)
     return '1'
 
 
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         name_server_ip = sys.argv[1]
     else:
-        name_server_ip = 'localhost'  # TODO
+        name_server_ip = '172.21.0.2'  # TODO
     name_server_port = 19609
     guest_port = 12607
     host = ''

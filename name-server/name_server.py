@@ -118,7 +118,6 @@ def copy_file(user, path, path2):
         return res
 
 
-
 def check_for_dir(user, path):
     """used for change directory"""
     node = get_node(user, path)
@@ -171,6 +170,7 @@ def init(user):
 
 
 def create_file(user, path):
+    print('you tried.')
     file, node = get_file(user, path)
     if node is None:
         return '0'
@@ -182,7 +182,7 @@ def create_file(user, path):
         new_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
         elements = root.findall('.//*[@id="%s"]' % new_id)
 
-    bank = choices(banks.keys())[0]
+    bank = choices(list(banks.keys()))[0]
     print(bank)
     sock = socket.socket()
     sock.settimeout(heart_stop_time * 2)
@@ -207,6 +207,7 @@ def create_file(user, path):
         'modified': str(datetime.datetime.now())
     })
 
+    print('created file.')
     tree.write(root_filename)
     return '1'
 
@@ -233,9 +234,10 @@ def write_file(user, path):
             'modified': str(datetime.datetime.now())
         })
 
+    print('written file.')
     tree.write(root_filename)
     banks_p = get_bank_in_possession(file.text, k=-1)
-    return [choices(get_banks_for_possession(banks_p)), file_id]
+    return [choices(get_banks_for_possession(banks_p))[0], file_id]
 
 
 def read_file(user, path):
@@ -247,6 +249,7 @@ def read_file(user, path):
 
     file_id = file.get('id')
     bank = get_bank_in_possession(file.text)
+    print(bank)
     if not bank:
         delete_file(user, path)
         return '2'
@@ -278,6 +281,7 @@ def delete_file(user, path, file=None, node=None):
             return '0'
 
     node.remove(file)
+    print('deleted file.')
     tree.write(root_filename)
     return '1'
 
@@ -313,7 +317,8 @@ class ClientListener(Thread):
 
         if not banks.keys():
             res = '0'
-        if command == 'init':
+            print('deadend.')
+        elif command == 'init':
             res = init(name)
         elif command == 'c':
             res = create_file(name, args[2])

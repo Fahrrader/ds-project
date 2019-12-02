@@ -60,13 +60,12 @@ def send_recv_name_server(args):
     try:
         sock.connect((server_ip, port))
         sock.sendall(str.encode("\n".join(args)))
-        try:
-            res = sock.recv(4096).decode('utf-8').split('\n')
-        except socket.error:
-            print("The connection has taken too long and timed out.")
-            return None
+        res = sock.recv(4096).decode('utf-8').split('\n')
         if len(res) == 1:
             res = res[0]
+    except socket.error:
+        print("The connection has taken too long and timed out.")
+        return None
     except ConnectionRefusedError:
         print("The service is currently unavailable.")
         res = '0'
