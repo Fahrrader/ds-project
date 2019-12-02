@@ -182,7 +182,7 @@ def create_file(user, path):
         new_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
         elements = root.findall('.//*[@id="%s"]' % new_id)
 
-    bank = choices(list(banks.keys()))[0]
+    bank = banks[choices(list(banks.keys()))[0]]
     print(bank)
     sock = socket.socket()
     sock.settimeout(heart_stop_time * 2)
