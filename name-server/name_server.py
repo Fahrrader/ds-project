@@ -401,32 +401,27 @@ class Heartbeat(Thread):
             print('Bank %s disconnected.' % self.addr)
 
     def run(self):
-        try:
-            while self._is_alive:
-                args = ['']
-                try:
-                    args = self.sock.recv(1024).decode('utf-8').split('\n')
-                except socket.error:
-                    pass
-                # if time.time() - heart_stop_time > self.time_since_beat:
-                message = args[0]
-                if message == '1':
-                    pass
-                    # print("%s says hi." % self.addr)
-                elif message == 'hello':
-                    print("%s says hello." % self.addr)
-                elif message == 'r':
-                    print('got notified with %s' % args[1])
-                    set_replica(args[1], args[2], self.addr, self.id)
-                elif self.time_since_beat + heart_stop_time < time.time():
-                    print("Timeout.")
-                    self._close()
-                if message != '':
-                    self.time_since_beat = time.time()
-            self._close()
-        except:
-            print("Something.")
-            self._close()
+        while self._is_alive:
+            args = ['']
+            try:
+                args = self.sock.recv(1024).decode('utf-8').split('\n')
+            except socket.error:
+                pass
+            # if time.time() - heart_stop_time > self.time_since_beat:
+            message = args[0]
+            if message == '1':
+                pass
+                # print("%s says hi." % self.addr)
+            elif message == 'hello':
+                print("%s says hello." % self.addr)
+            elif message == 'r':
+                print('got notified with %s' % args[1])
+                set_replica(args[1], args[2], self.addr, self.id)
+            elif self.time_since_beat + heart_stop_time < time.time():
+                self._close()
+            if message != '':
+                self.time_since_beat = time.time()
+        self._close()
 
 
 class BankHandler(Thread):
