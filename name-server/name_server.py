@@ -255,7 +255,7 @@ def read_file(user, path):
         delete_file(user, path)
         return '2'
 
-    return [file_id, bank]
+    return [file_id, banks[bank].addr]
 
 
 def delete_file(user, path, file=None, node=None):
@@ -371,8 +371,9 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
 
     file.set('modified', str(datetime.datetime.now()))
     file.set('size', file_size)
-    file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)
     print(file.text)
+    file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)
+    print('text ' + file.text)
     tree.write(root_filename)
 
 
