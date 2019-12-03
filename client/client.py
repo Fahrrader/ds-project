@@ -126,7 +126,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         server_ip = sys.argv[1]
     else:
-        server_ip = '172.31.16.189'  # TODO
+        server_ip = 'localhost'  # TODO
     port = 12607
     sock_name_server = socket.socket()
     sock_storage = socket.socket()

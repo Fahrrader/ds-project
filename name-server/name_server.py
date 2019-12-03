@@ -187,7 +187,7 @@ def create_file(user, path):
     sock = socket.socket()
     sock.settimeout(heart_stop_time * 2)
     try:
-        sock.connect((bank, storage_port))
+        sock.connect((bank, guest_port))
         sock.sendall(str.encode("\n".join(['c', new_id])))
         sock.close()
     except ConnectionRefusedError:
@@ -249,6 +249,7 @@ def read_file(user, path):
         return '2'
 
     file_id = file.get('id')
+    print(file_id)
     bank = get_bank_in_possession(file.text)
     print(bank)
     if not bank:
@@ -270,7 +271,7 @@ def delete_file(user, path, file=None, node=None):
         sock = socket.socket()
         sock.settimeout(heart_stop_time * 2)
         try:
-            sock.connect((bank, storage_port))
+            sock.connect((bank, guest_port))
             sock.sendall(str.encode("\n".join(['d', bank])))
             sock.close()
         except ConnectionRefusedError:
@@ -317,9 +318,9 @@ class ClientListener(Thread):
         self.name = name
         res = '0'
 
-        if not banks.keys():
-            res = '0'
-        elif command == 'init':
+        #if not banks.keys():
+            #res = '0'
+        if command == 'init':
             res = init(name)
         elif command == 'c':
             res = create_file(name, args[2])
@@ -364,7 +365,7 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
             sock = socket.socket()
             sock.settimeout(heart_stop_time * 2)
             try:
-                sock.connect((bank_ip, storage_port))
+                sock.connect((bank_ip, guest_port))
                 sock.sendall(str.encode("\n".join(['r', file_id] + bank_ids)))
             except ConnectionRefusedError:
                 print("The service is currently unavailable.")

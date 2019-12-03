@@ -35,7 +35,10 @@ You can find the architectural diagrams of the project by the links below, or in
 
 In our project we use TCP/IP protocol. The communication between the servers takes place on port 19609 and between the servers and clients on port 12607.
 
-Using the first one we send and receive commands (such as create, write, delete file, replicate), data (such as servers ips, file names, file data etc.) and pings (aka heartbeats).
+Using the first one we send pings — heartbeats — from storage to naming servers and their notifications (such as create, write, delete file, replicate).
 
 Using port 12607 we send and receive such data as commands (initialize, create directory/file, delete directory/file, etc.) and data (file names, storage servers ips,
-file data etc.)
+file data etc.) from clients to servers and name server to storage server.
+
+Interface between name server and client is most exhaustive, including all of the commands. Often when working with directories or file information, name server will output the data stored on it — including the file structure and minimal amount of attributes about the files themselves.
+Storage servers, however, have only four types of messages to look out for, apart from their heartbeats: *'create', 'write', 'read', 'delete'*. 
