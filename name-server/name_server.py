@@ -158,8 +158,8 @@ def list_dir(user, path):
     return listed
 
 
-def get_bank_in_possession(text, k=1):
-    bank_indices = text.strip().split(',') if text is not None and text != '' else []
+def get_bank_in_possession(file, k=1):
+    bank_indices = get_bank_indices(file)
     bank_indices = list(map(int, bank_indices))
     if not bank_indices:
         return []
@@ -172,6 +172,15 @@ def get_bank_in_possession(text, k=1):
         bank = choices(bank_indices)[0]
 
     return bank
+
+
+def get_bank_indices(file):
+    bank_indices = file.findall()
+    bank_indices = bank_indices if bank_indices is not None else []
+    bank_indices = [bank.text for bank in bank_indices]
+    print(bank_indices)  # todo
+    return bank_indices
+    # file.text.strip().split(',') if file.text is not None else []
 
 
 def get_banks_for_possession(banks_already):
@@ -263,7 +272,7 @@ def write_file(user, path):
 
     print('written file.')
     tree.write(root_filename)
-    banks_p = get_bank_in_possession(file.text, k=-1)
+    banks_p = get_bank_in_possession(file, k=-1)
     return [file_id, choices(get_banks_for_possession(banks_p))[0]]
 
 
@@ -275,7 +284,7 @@ def read_file(user, path):
         return '2'
 
     file_id = file.get('id')
-    bank = get_bank_in_possession(file.text)
+    bank = get_bank_in_possession(file)
     is_bank_okay = bank or bank == 0
     if not is_bank_okay and datetime.datetime.strptime(file.get('modified'), '%Y-%m-%d %H:%M:%S.%f') + datetime.timedelta(hours=heart_stop_time) < datetime.datetime.now():
         print('No one has this file. Delete.')
@@ -293,7 +302,7 @@ def delete_file(user, path, file=None, node=None):
         if file is None:
             return '2'
 
-    bank_indices = get_bank_in_possession(file.text, -1)
+    bank_indices = get_bank_in_possession(file, -1)
     for bank in bank_indices:
         sock = socket.socket()
         sock.settimeout(heart_stop_time * 2)
@@ -382,16 +391,18 @@ def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
         return
 
     if file_size is None:
-        bank_id = choices(file.text.strip().split(',') if file.text is not None else [])[0]
+        bank_id = choices(get_bank_indices(file))[0]
         bank_ip = banks[bank_id].addr
     else:
-        file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)
+        # file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)  # todo
+        i = ET.SubElement(file, 'i')
+        i.text = str(file_id)
         file.set('modified', str(datetime.datetime.now()))
         file.set('size', file_size)
         file.set('op', '0')
         tree.write(root_filename)
 
-    bank_indices = file.text.strip().split(',') if file.text is not None else []
+    bank_indices = get_bank_indices(file)
     if len(bank_indices) < 2:
         bank_ips = get_banks_for_possession(bank_indices)
         if bank_ips:
@@ -406,6 +417,10 @@ def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
             except socket.error:
                 print("The connection timed out.")
             sock.close()
+
+
+def delete_old_replicas(bank_id):
+    elements = root.findall('.//*[i="%s"]' % bank_id)
 
 
 class Heartbeat(Thread):
