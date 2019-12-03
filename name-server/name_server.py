@@ -363,13 +363,13 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
         return
     bank_indices = file.text.strip().split(',') if file.text is not None else []
     if not bank_indices:
-        bank_ids = get_banks_for_possession([bank_id])
-        if bank_ids:
+        bank_ips = get_banks_for_possession([bank_id])
+        if bank_ips:
             sock = socket.socket()
             sock.settimeout(heart_stop_time * 2)
             try:
                 sock.connect((bank_ip, guest_port))
-                sock.sendall(str.encode("\n".join(['r', file_id] + bank_ids)))
+                sock.sendall(str.encode("\n".join(['r', file_id] + bank_ips)))
             except ConnectionRefusedError:
                 print("The service is currently unavailable.")
             except socket.error:
@@ -378,7 +378,7 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
 
     file.set('modified', str(datetime.datetime.now()))
     file.set('size', file_size)
-    file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + bank_id
+    file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)
     tree.write(root_filename)
 
 
