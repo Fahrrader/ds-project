@@ -133,7 +133,7 @@ def list_dir(user, path):
 
 def get_bank_in_possession(text, k=1):
     bank_indices = text.strip().split(',') if text is not None and text != '' else []
-    print(bank_indices)
+    bank_indices = list(map(int, bank_indices))
     if not bank_indices:
         return []
     if k != 1:
@@ -248,7 +248,6 @@ def read_file(user, path):
         return '2'
 
     file_id = file.get('id')
-    print('READING')
     bank = get_bank_in_possession(file.text)
     if not bank:
         print('No one has this file. Delete.')
