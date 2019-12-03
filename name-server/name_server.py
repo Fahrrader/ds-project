@@ -148,8 +148,11 @@ def get_bank_in_possession(text, k=1):
 def get_banks_for_possession(banks_already):
     banks_r = list(banks.keys())
     shuffle(banks_r)
+    print('BANKS R')
     banks_r = [bank for bank in banks_r if bank not in banks_already]
+    print(banks_r.__len__())
     banks_r = banks_r[:min(replica_number(), banks_r.__len__())]
+    print(banks_r.__len__())
     banks_r = [banks[bank].addr for bank in banks_r]
     print('next in line: ')
     print(banks_r)
@@ -157,7 +160,7 @@ def get_banks_for_possession(banks_already):
 
 
 def replica_number():
-    return max(int(len(banks) / 3), 2) - 1 if len(banks) > 1 else len(banks)
+    return min(max(int(len(banks) / 3), 2) - 1, len(banks))
 
 
 def init(user):

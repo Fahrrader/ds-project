@@ -23,11 +23,6 @@ def confirm_write(file_name, file_size):
     next_heartbeat[0] = "\n".join(['r', file_name, file_size])
 
 
-"""def replicate(file_name, storage_list):
-    for storage_info in storage_list:
-        send_update_to_storage(file_name, storage_info[0], storage_info[1])"""
-
-
 def send_file(file_name, client_ip, sock):
     if sock is None:
         sock = socket.socket()
@@ -36,6 +31,7 @@ def send_file(file_name, client_ip, sock):
     try:
         with open(storage_name + '/' + file_name, 'rb') as f:
             file_size = os.fstat(f.fileno()).st_size
+            print('filesize %d' % file_size)
             sock.send(str.encode(str(file_size), 'utf-8'))
             l = f.read(chunk_size)
             while l:
@@ -98,6 +94,7 @@ class ClientListener(Thread):
             confirm_write(args[0], '0')
 
         elif command == 'r':
+            print('CALM@')
             print(args)
             for ip in args[1:]:
                 send_file(args[0], ip, self.sock if self.addr == ip else None)
@@ -124,7 +121,6 @@ class Heart(Thread):
         self.sock.settimeout(self.heartbeat_time + 1)
 
     def _close(self):
-        # self.sock.shutdown(how=socket.SHUT_RDWR)
         self.sock.close()
 
     def run(self):
