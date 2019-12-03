@@ -50,8 +50,9 @@ def send_file(file_name, client_ip, sock):
 def write_file(file_name, file_size, sock):
     with open(storage_name + '/' + file_name, 'wb') as f:
         while True:
-            print('getting file')
             data = sock.recv(chunk_size)
+            print(file_size)
+            print(data)
             if not data:
                 if int(file_size) == os.fstat(f.fileno()).st_size:
                     print('you did it')
@@ -145,7 +146,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         name_server_ip = sys.argv[1]
     else:
-        name_server_ip = '172.31.16.189'  # TODO
+        name_server_ip = '50.19.187.186'  # TODO
     name_server_port = 19609
     guest_port = 12607
     host = socket.gethostname()

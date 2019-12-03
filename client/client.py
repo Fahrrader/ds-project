@@ -75,24 +75,20 @@ def send_recv_name_server(args):
 
 def send_storage(file_name, file_id, storage_ip):
     sock = socket.socket()
-    try:
-        with open(storage_name + '/' + file_name, 'rb') as f:
-            file_size = os.fstat(f.fileno()).st_size
+    with open(storage_name + '/' + file_name, 'rb') as f:
+        file_size = os.fstat(f.fileno()).st_size
 
-            sock.connect((storage_ip, port))
-            sock.sendall(str.encode("\n".join(['w', file_id, str(file_size)])))
-            print(file_size)
+        sock.connect((storage_ip, port))
+        sock.sendall(str.encode("\n".join(['w', file_id, str(file_size)])))
+        print(file_size)
 
+        l = f.read(chunk_size)
+        while l:
+            print(l)
+            sock.send(l)
             l = f.read(chunk_size)
-            while l:
-                print(l)
-                sock.send(l)
-                l = f.read(chunk_size)
-        sock.close()
-        return '1'
-    except:
-        print("Something went wrong with transmitting.")
-        return '0'
+    sock.close()
+    return '1'
 
 
 def recv_storage(file_name, file_id, storage_ip):
@@ -113,8 +109,11 @@ def recv_storage(file_name, file_id, storage_ip):
                     else:
                         return '0'
                 f.write(data)
-    except:
-        print("Something went wrong with transmitting.")
+    except socket.error:
+        print("The connection has taken too long and timed out.")
+        return '0'
+    except ConnectionRefusedError:
+        print("The service is currently unavailable.")
         return '0'
 
 
