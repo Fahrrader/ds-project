@@ -81,12 +81,10 @@ def send_storage(file_name, file_id, storage_ip):
         file_size = os.fstat(f.fileno()).st_size
 
         sock.connect((storage_ip, port))
-        sock.sendall(str.encode("\n".join(['w', file_id, str(file_size)])))
-        print(file_size)
+        sock.send(str.encode("\n".join(['w', file_id, str(file_size)])))
 
         l = f.read(chunk_size)
         while l:
-            print(l)
             sock.send(l)
             l = f.read(chunk_size)
     sock.close()
@@ -121,6 +119,7 @@ def recv_storage(file_name, file_id, storage_ip):
 
 if __name__ == "__main__":
     user = "Unknown"
+    initialized = False
     while True:
         user = input("Welcome! State your username in order to access the file sharing system: ").strip()
         if not error_forbidden_symbols(user):
@@ -160,6 +159,7 @@ if __name__ == "__main__":
         elif c == 'init':
             res = send_recv_name_server([user, 'init'])
             if res == '1':
+                initialized = True
                 print("Initialized a new system.")
             else:
                 print("Error while initializing a new system.")
@@ -180,7 +180,6 @@ if __name__ == "__main__":
                 continue
             res = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
             if len(res) > 1:
-                print('my gosh!')
                 res = recv_storage(args[0], res[0], res[1])
             if res == '1':
                 webbrowser.open(storage_name + '/' + args[0])
@@ -194,7 +193,6 @@ if __name__ == "__main__":
                 continue
             res = send_recv_name_server([user, 'w', current_dir + '\\' + args[0]])
             if len(res) > 1:
-                print('rescue mission!')
                 res = send_storage(args[0], res[0], res[1])
             if res == '1':
                 print("The file has been successfully writen.")

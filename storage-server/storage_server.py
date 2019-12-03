@@ -51,14 +51,10 @@ def write_file(file_name, file_size, sock):
     with open(storage_name + '/' + file_name, 'wb') as f:
         while True:
             data = sock.recv(chunk_size)
-            print(file_size)
-            print(data)
             if not data:
                 if int(file_size) == os.fstat(f.fileno()).st_size:
-                    print('you did it')
                     return '1', file_size
                 else:
-                    print('meh')
                     return '0', file_size
             f.write(data)
 

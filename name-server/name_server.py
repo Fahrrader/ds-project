@@ -229,7 +229,7 @@ def write_file(user, path):
         file = ET.SubElement(node, 'f', attrib={
             'id': file_id,
             'name': file_name,
-            'size': '0',  # something
+            'size': '0',
             'created': str(datetime.datetime.now()),
             'modified': str(datetime.datetime.now())
         })
@@ -270,7 +270,7 @@ def delete_file(user, path, file=None, node=None):
         sock = socket.socket()
         sock.settimeout(heart_stop_time * 2)
         try:
-            sock.connect((bank, guest_port))
+            sock.connect((banks[bank].addr, guest_port))
             sock.sendall(str.encode("\n".join(['d', bank])))
             sock.close()
         except ConnectionRefusedError:
@@ -304,8 +304,6 @@ class ClientListener(Thread):
         self.name = ""
 
     def _close(self):
-        # users.remove(self.sock)
-        # self.sock.shutdown(how=socket.SHUT_RDWR)
         self.sock.close()
         print(self.name + ' disconnected.')
 
@@ -325,13 +323,10 @@ class ClientListener(Thread):
             res = create_file(name, args[2])
         elif command == 'r':
             res = read_file(name, args[2])
-            # to send back [storage_ip, storage_port, file_name]
         elif command == 'w':
             res = write_file(name, args[2])
-            # to send back [storage_ip, storage_port, file_name]
         elif command == 'd':
             res = delete_file(name, args[2])
-            # answer 0 if an error, 1 if okay, 2 if no such file
         elif command == 'i':
             res = get_file_info(name, args[2])
         elif command == 'cp':
@@ -403,11 +398,9 @@ class Heartbeat(Thread):
                 args = self.sock.recv(1024).decode('utf-8').split('\n')
             except socket.error:
                 pass
-            # if time.time() - heart_stop_time > self.time_since_beat:
             message = args[0]
             if message == '1':
                 pass
-                # print("%s says hi." % self.addr)
             elif message == 'hello':
                 print("%s says hello." % self.addr)
             elif message == 'r':
