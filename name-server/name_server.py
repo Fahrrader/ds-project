@@ -419,11 +419,13 @@ class Heartbeat(Thread):
                     print('got notified with %s' % args[1])
                     set_replica(args[1], args[2], self.addr, self.id)
                 elif self.time_since_beat + heart_stop_time < time.time():
+                    print("Timeout.")
                     self._close()
                 if message != '':
                     self.time_since_beat = time.time()
             self._close()
         except:
+            print("Something.")
             self._close()
 
 
