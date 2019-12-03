@@ -175,7 +175,7 @@ def get_bank_in_possession(file, k=1):
 
 
 def get_bank_indices(file):
-    bank_indices = file.findall()
+    bank_indices = file.findall('./')
     bank_indices = bank_indices if bank_indices is not None else []
     bank_indices = [bank.text for bank in bank_indices]
     print(bank_indices)  # todo
