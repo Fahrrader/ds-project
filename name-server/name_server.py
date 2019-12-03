@@ -20,7 +20,6 @@ def get_node(user, path):
         for d in path.split('\\'):
             xml_path += '/d[@name="%s"]' % d
     return root.find(xml_path)
-    # return root.find('./%s/%s' % (user, path))
 
 
 def get_last_node_split(path: str):
@@ -30,7 +29,6 @@ def get_last_node_split(path: str):
 
 def get_file(user, path: str):
     cut_path, file = get_last_node_split(path)
-    # print(cut_path, file_begins_at)
     node = get_node(user, cut_path)
     return node.find('./f[@name="%s"]' % file) if node is not None else None, node
 
@@ -79,7 +77,6 @@ def finally_delete_dir(user, path):
 
 
 def move_file(user, path, path2):
-    # cut_path, dir_begins_at = get_last_node_split(path)
     file, node1 = get_file(user, path)
     if node1 is None:
         return '0'
@@ -251,8 +248,8 @@ def read_file(user, path):
         return '2'
 
     file_id = file.get('id')
+    print('READING')
     bank = get_bank_in_possession(file.text)
-    print(bank)
     if not bank:
         print('No one has this file. Delete.')
         delete_file(user, path)
