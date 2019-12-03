@@ -366,16 +366,20 @@ class ClientListener(Thread):
         self._close()
 
 
-def set_replica(file_id, file_size, bank_ip, bank_id):
+def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
     file = root.find('.//*[@id="%s"]' % file_id)
     if file is None:
         return
 
-    file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)
-    file.set('modified', str(datetime.datetime.now()))
-    file.set('size', file_size)
-    file.set('op', '0')
-    tree.write(root_filename)
+    if file_size is None:
+        bank_id = choices(file.text.strip().split(',') if file.text is not None else [])[0]
+        bank_ip = banks[bank_id].addr
+    else:
+        file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)
+        file.set('modified', str(datetime.datetime.now()))
+        file.set('size', file_size)
+        file.set('op', '0')
+        tree.write(root_filename)
 
     bank_indices = file.text.strip().split(',') if file.text is not None else []
     if len(bank_indices) < 2:
@@ -408,6 +412,8 @@ class Heartbeat(Thread):
         # self.sock.shutdown(how=socket.SHUT_RDWR)
         if self._is_alive:
             self._is_alive = False
+            # TODO find all where text contains id -- and it is surrounded with , or is first or second element
+            # go through them, strip, launch other replicas if necessary
             del banks[self.id]
             self.sock.close()
             print('Bank %s disconnected.' % self.addr)

@@ -16,10 +16,6 @@ def init():
 
 
 def confirm_write(file_name, file_size):
-    """sock = socket.socket()
-    sock.connect((name_server_ip, name_server_port))
-    sock.sendall(str.encode("\n".join(['r', file_name, file_size])))
-    sock.close()"""
     next_heartbeat[0] = "\n".join(['r', file_name, file_size])
 
 
@@ -36,12 +32,12 @@ def send_file(file_name, old_name, client_ip, sock=None):
     with open(storage_name + '/' + old_name, 'rb') as f:
         file_size = os.fstat(f.fileno()).st_size
         sock.send(str.encode("\n".join(['w', file_name, str(file_size)])))
-        # sock.send(str.encode(str(file_size), 'utf-8'))
         sock.recv(1)
         l = f.read(chunk_size)
         while l:
             sock.send(l)
             l = f.read(chunk_size)
+
     if is_nested_sock:
         sock.close()
 
@@ -97,12 +93,14 @@ class ClientListener(Thread):
             confirm_write(args[0], '0')
 
         elif command == 'r':
-            print(args)
+            print(args)  # todo
             if args.__len__() > 2:
                 for ip in args[2:]:
                     send_file(args[0], args[1], ip, self.sock if self.addr == ip else None)
-            else:
+            elif args.__len__() == 2:
                 send_file(args[0], args[1], self.addr, self.sock)
+            else:
+                send_file(args[0], '', self.addr, self.sock)
 
         elif command == 'w':
             print('got write')
