@@ -184,8 +184,13 @@ def get_bank_indices(file):
 def get_banks_for_possession(banks_already):
     banks_r = list(banks.keys())
     shuffle(banks_r)
+    print("GREATNESS")
     banks_r = [bank for bank in banks_r if bank not in banks_already]
+    print(banks_r)
+    print(banks_already)
     banks_r = banks_r[:min(replica_number(), banks_r.__len__())]
+    print(banks_r)
+    print(banks_already)
     banks_r = [banks[bank].addr for bank in banks_r]
     return banks_r
 
@@ -399,8 +404,6 @@ def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
         tree.write(root_filename)
 
     bank_indices = get_bank_indices(file)
-    print("THOSE ARE OUR FIRST")
-    print(bank_indices)
     if len(bank_indices) < replica_number():
         bank_ips = get_banks_for_possession(bank_indices)
         if bank_ips:
