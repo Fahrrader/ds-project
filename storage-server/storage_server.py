@@ -8,7 +8,7 @@ from time import sleep
 
 def init():
     try:
-        rmtree(storage_name)  # todo
+        rmtree(storage_name)
     except IOError:
         pass
     os.mkdir(storage_name)
@@ -114,14 +114,14 @@ class ClientListener(Thread):
         elif command == 'd':
             delete(args[0])
 
-        self._close()
+        # self._close()
 
 
 class Heart(Thread):
     def __init__(self):
         super().__init__(daemon=True)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.is_alive = True
+        self._is_alive = True
         self.heartbeat_time = 2
         self.sock.settimeout(self.heartbeat_time + 1)
 
@@ -137,7 +137,8 @@ class Heart(Thread):
                 next_heartbeat[0] = '1'
                 sleep(self.heartbeat_time)
         except:
-            self.is_alive = False
+            print("I'm dying...")
+            self._is_alive = False
             socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, guest_port))
             self._close()
 
@@ -163,7 +164,7 @@ if __name__ == "__main__":
     sock.bind((host, guest_port))
 
     sock.listen()
-    while heart.is_alive:
+    while heart._is_alive:
         con, addr = sock.accept()
         # start new thread for user
         ClientListener(con, addr).start()

@@ -75,6 +75,8 @@ def send_recv_name_server(args):
 
 def send_storage(file_name, file_id, storage_ip):
     sock = socket.socket()
+    if not os.path.isfile(storage_name + '/' + file_name):
+        open(storage_name + '/' + file_name, 'w')
     with open(storage_name + '/' + file_name, 'rb') as f:
         file_size = os.fstat(f.fileno()).st_size
 

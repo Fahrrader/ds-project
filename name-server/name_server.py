@@ -252,6 +252,7 @@ def read_file(user, path):
 
     file_id = file.get('id')
     bank = get_bank_in_possession(file.text)
+    print(bank)
     if not bank:
         print('No one has this file. Delete.')
         delete_file(user, path)
