@@ -116,10 +116,9 @@ def copy_file(user, path, path2):
         new_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
         elements = root.findall('.//*[@id="%s"]' % new_id)
 
-    cut_path, file_name = get_last_node_split(path)
     file = ET.SubElement(node2, 'f', attrib={
         'id': new_id,
-        'name': file_name,
+        'name': file_path,
         'size': '0',
         'created': str(datetime.datetime.now()),
         'modified': str(datetime.datetime.now())
@@ -140,6 +139,7 @@ def copy_file(user, path, path2):
         print("The connection took too long and timed out.")
         sock.close()
         return '0'
+    return '1'
 
 
 def check_for_dir(user, path):
@@ -467,8 +467,6 @@ class BankHandler(Thread):
             banks_index[0] += 1
 
 
-# todo make a cleaner to check on bank expiry (get rid of old banks), replica number (adjust, send out afterwards)
-# todo delete files that don't have any more replicas
 if __name__ == "__main__":
     host = socket.gethostname()
     storage_port = 19609
