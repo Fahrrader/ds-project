@@ -319,7 +319,6 @@ class ClientListener(Thread):
 
         if not banks.keys():
             res = '0'
-            print('deadend.')
         elif command == 'init':
             res = init(name)
         elif command == 'c':

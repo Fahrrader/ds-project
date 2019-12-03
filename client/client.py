@@ -65,7 +65,7 @@ def send_recv_name_server(args):
             res = res[0]
     except socket.error:
         print("The connection has taken too long and timed out.")
-        return None
+        res = '0'
     except ConnectionRefusedError:
         print("The service is currently unavailable.")
         res = '0'
@@ -88,7 +88,7 @@ def send_storage(file_name, file_id, storage_ip):
                 l = f.read(chunk_size)
         sock.close()
         return '1'
-    except:
+    except IOError:  # todo
         print("Something went wrong with transmitting.")
         return '0'
 
@@ -111,13 +111,12 @@ def recv_storage(file_name, file_id, storage_ip):
                     else:
                         return '0'
                 f.write(data)
-    except:
+    except IOError:  # todo
         print("Something went wrong with transmitting.")
         return '0'
 
 
 if __name__ == "__main__":
-    print(''.split(','))
     user = "Unknown"
     while True:
         user = input("Welcome! State your username in order to access the file sharing system: ").strip()
@@ -127,7 +126,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         server_ip = sys.argv[1]
     else:
-        server_ip = 'localhost'
+        server_ip = '172.31.16.189'  # TODO
     port = 12607
     sock_name_server = socket.socket()
     sock_storage = socket.socket()

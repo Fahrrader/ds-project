@@ -94,6 +94,7 @@ class ClientListener(Thread):
                 confirm_write(args[0], '0')
 
             elif command == 'r':
+                print(args)
                 for _ in args[1:]:
                     res = send_file(args[0], self.sock)
                 """f = open(file_name)
@@ -150,7 +151,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         name_server_ip = sys.argv[1]
     else:
-        name_server_ip = '172.21.0.2'  # TODO
+        name_server_ip = '172.31.16.189'  # TODO
     name_server_port = 19609
     guest_port = 12607
     host = ''
