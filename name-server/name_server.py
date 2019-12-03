@@ -271,7 +271,8 @@ def write_file(user, path):
     print('written file.')
     tree.write(root_filename)
     banks_p = get_bank_in_possession(file, k=-1)
-    # banks_o = get_banks_for_possession(banks_p)
+    if not banks_p:
+        banks_p = get_banks_for_possession(banks_p)
     return [file_id, choices(banks_p)[0]]
 
 
