@@ -199,7 +199,7 @@ if __name__ == "__main__":
             if len(res) > 1:
                 res = send_storage(args[0], res[0], res[1])
             if res == '1':
-                print("The file has been successfully writen.")
+                print("The file has been successfully written.")
             else:
                 print("Sorcery! It didn't work.")
 

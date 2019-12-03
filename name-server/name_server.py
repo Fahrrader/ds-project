@@ -178,9 +178,7 @@ def get_bank_indices(file):
     bank_indices = file.findall('./')
     bank_indices = bank_indices if bank_indices is not None else []
     bank_indices = [bank.text for bank in bank_indices]
-    print(bank_indices)  # todo
     return bank_indices
-    # file.text.strip().split(',') if file.text is not None else []
 
 
 def get_banks_for_possession(banks_already):
@@ -401,7 +399,9 @@ def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
         tree.write(root_filename)
 
     bank_indices = get_bank_indices(file)
-    if len(bank_indices) < 2:
+    print("THOSE ARE OUR FIRST")
+    print(bank_indices)
+    if len(bank_indices) < replica_number():
         bank_ips = get_banks_for_possession(bank_indices)
         if bank_ips:
             print("Decided to replicate to " + str(bank_ips))
@@ -417,10 +417,16 @@ def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
             sock.close()
 
 
+# todo
 def delete_old_replicas(bank_id):
     elements = root.findall('.//*/f[i="%s"]' % bank_id)
-    elements = [x for n, x in enumerate(elements) if x not in elements[:n]]
+    # elements = [x for n, x in enumerate(elements) if x not in elements[:n]]
     print(elements)
+    for e in elements:
+        e.remove(e.find('./[i="%s]"'))
+        print(e)
+        set_replica(e.get('id'))
+    tree.write(root_filename)
 
 
 class Heartbeat(Thread):
@@ -434,12 +440,9 @@ class Heartbeat(Thread):
         self.time_since_beat = time.time()
 
     def _close(self):
-        # self.sock.shutdown(how=socket.SHUT_RDWR)
         if self._is_alive:
             self._is_alive = False
             delete_old_replicas(self.id)
-            # TODO find all where text contains id -- and it is surrounded with , or is first or second element
-            # go through them, strip, launch other replicas if necessary
             del banks[self.id]
             self.sock.close()
             print('Bank %s disconnected.' % self.addr)
