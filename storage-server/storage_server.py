@@ -130,17 +130,11 @@ class Heart(Thread):
         self.sock.close()
 
     def run(self):
-        try:
-            self.sock.connect((name_server_ip, name_server_port))
-            while True:
-                self.sock.send(str.encode(next_heartbeat[0]))
-                next_heartbeat[0] = '1'
-                sleep(self.heartbeat_time)
-        except:
-            print("I'm dying...")
-            self._is_alive = False
-            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, guest_port))
-            self._close()
+        self.sock.connect((name_server_ip, name_server_port))
+        while True:
+            self.sock.send(str.encode(next_heartbeat[0]))
+            next_heartbeat[0] = '1'
+            sleep(self.heartbeat_time)
 
 
 if __name__ == "__main__":
