@@ -79,19 +79,18 @@ def send_storage(file_name, file_id, storage_ip):
         with open(storage_name + '/' + file_name, 'rb') as f:
             file_size = os.fstat(f.fileno()).st_size
 
-            print(storage_ip + str(port))
             sock.connect((storage_ip, port))
             sock.sendall(str.encode("\n".join(['w', file_id, str(file_size)])))
-            print('okay')
+            print(file_size)
 
             l = f.read(chunk_size)
             while l:
-                print('process')
+                print(l)
                 sock.send(l)
                 l = f.read(chunk_size)
         sock.close()
         return '1'
-    except IOError:  # todo
+    except:
         print("Something went wrong with transmitting.")
         return '0'
 
@@ -114,7 +113,7 @@ def recv_storage(file_name, file_id, storage_ip):
                     else:
                         return '0'
                 f.write(data)
-    except IOError:  # todo
+    except:
         print("Something went wrong with transmitting.")
         return '0'
 

@@ -50,11 +50,14 @@ def send_file(file_name, client_ip, sock):
 def write_file(file_name, file_size, sock):
     with open(storage_name + '/' + file_name, 'wb') as f:
         while True:
+            print('getting file')
             data = sock.recv(chunk_size)
             if not data:
                 if int(file_size) == os.fstat(f.fileno()).st_size:
+                    print('you did it')
                     return '1', file_size
                 else:
+                    print('meh')
                     return '0', file_size
             f.write(data)
 
@@ -89,29 +92,26 @@ class ClientListener(Thread):
         command = self.sock.recv(2048).decode('utf-8').split('\n')
         args = command[1:]
         command = command[0]
-        res = '0'
-        try:
-            if command == 'c':
-                print('got create')
-                create(args[0])
-                print('gotta notify')
-                confirm_write(args[0], '0')
 
-            elif command == 'r':
-                print(args)
-                for ip in args[1:]:
-                    send_file(args[0], ip, self.sock if self.addr == ip else None)
+        if command == 'c':
+            print('got create')
+            create(args[0])
+            print('gotta notify')
+            confirm_write(args[0], '0')
 
-            elif command == 'w':
-                print('got write')
-                _, f_size = write_file(args[0], args[1], self.sock)
-                print('gotta notify')
-                confirm_write(args[0], f_size)
+        elif command == 'r':
+            print(args)
+            for ip in args[1:]:
+                send_file(args[0], ip, self.sock if self.addr == ip else None)
 
-            elif command == 'd':
-                delete(args[0])
-        except:
-            self.sock.sendall(str.encode("\n".join(res)))
+        elif command == 'w':
+            print('got write')
+            _, f_size = write_file(args[0], args[1], self.sock)
+            print('gotta notify')
+            confirm_write(args[0], f_size)
+
+        elif command == 'd':
+            delete(args[0])
 
         self._close()
 

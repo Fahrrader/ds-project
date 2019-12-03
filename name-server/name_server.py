@@ -185,7 +185,6 @@ def create_file(user, path):
         new_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
         elements = root.findall('.//*[@id="%s"]' % new_id)
 
-    print(banks.keys())
     bank = banks[choices(list(banks.keys()))[0]].addr
     sock = socket.socket()
     sock.settimeout(heart_stop_time * 2)
@@ -254,7 +253,7 @@ def read_file(user, path):
     file_id = file.get('id')
     bank = get_bank_in_possession(file.text)
     if not bank:
-        print('opa, no one has this file.')
+        print('No one has this file. Delete.')
         delete_file(user, path)
         return '2'
 
@@ -439,7 +438,6 @@ class BankHandler(Thread):
         while True:
             con, addr = self.sock.accept()
             addr = addr[0]
-            print(addr)
             banks[banks_index[0]] = Heartbeat(con, addr, banks_index[0])
             banks[banks_index[0]].start()
             banks_index[0] += 1
