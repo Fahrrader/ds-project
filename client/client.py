@@ -186,7 +186,10 @@ if __name__ == "__main__":
             if len(res) > 1:
                 res = recv_storage(args[0], res[0], res[1])
             if res == '1':
-                webbrowser.open(storage_name + '/' + args[0])
+                try:
+                    webbrowser.open(storage_name + '/' + args[0])
+                except:
+                    pass
             elif res == '2':
                 print('There is no such file in the current directory.')
             else:
