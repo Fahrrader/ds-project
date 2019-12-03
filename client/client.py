@@ -9,8 +9,7 @@ def show_help():
     print('init         -- to initialize a new repository with this IP address.')
     print('c [filename] -- create an empty file in your directory.')
     print('r [filename] -- store and open a file from your directory.')
-    print(
-        'w [filename] -- send_recv_name_server a file from your computer to the directory with replacing the old one.')
+    print('w [filename] -- send_recv_name_server a file from your computer to the directory with replacing the old one.')
     print('d [filename] -- delete a file from your directory.')
     print('i [filename] -- display information about a file in your directory.')
     print('cp [filename] [path] -- store a copy of a file in the new path.')
@@ -92,12 +91,10 @@ def send_storage(file_name, file_id, storage_ip):
 
 
 def recv_storage(file_name, file_id, storage_ip):
-    # for cases when we receive a file from the server
     sock = socket.socket()
     try:
         sock.connect((storage_ip, port))
-        # connected storage server
-        sock.sendall(str.encode("\n".join(['r', file_id])))
+        sock.send(str.encode("\n".join(['r', file_id])))
         file_size = int(sock.recv(1024))
         with open(storage_name + '/' + file_name, 'wb') as f:
             while True:
@@ -124,6 +121,7 @@ if __name__ == "__main__":
         user = input("Welcome! State your username in order to access the file sharing system: ").strip()
         if not error_forbidden_symbols(user):
             break
+    print("To create a repository (and nullify it if you so wish) use 'init'.")
 
     if len(sys.argv) > 1:
         server_ip = sys.argv[1]

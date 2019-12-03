@@ -51,6 +51,7 @@ def write_file(file_name, file_size, sock):
     with open(storage_name + '/' + file_name, 'wb') as f:
         while True:
             data = sock.recv(chunk_size)
+            print(data)
             if not data:
                 if int(file_size) == os.fstat(f.fileno()).st_size:
                     return '1', file_size
@@ -103,6 +104,7 @@ class ClientListener(Thread):
 
         elif command == 'w':
             print('got write')
+            print(args)
             _, f_size = write_file(args[0], args[1], self.sock)
             print('gotta notify')
             confirm_write(args[0], f_size)
