@@ -398,7 +398,6 @@ def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
         i.text = str(bank_id)
         file.set('modified', str(datetime.datetime.now()))
         file.set('size', file_size)
-        file.set('op', '0')
         tree.write(root_filename)
 
     bank_indices = get_bank_indices(file)
@@ -420,6 +419,7 @@ def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
 
 def delete_old_replicas(bank_id):
     elements = root.findall('.//*/f[i="%s"]' % bank_id)
+    elements = [x for n, x in enumerate(elements) if x not in elements[:n]]
     print(elements)
 
 
