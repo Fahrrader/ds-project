@@ -31,7 +31,6 @@ def send_file(file_name, client_ip, sock=None):
         sock.connect((client_ip, guest_port))
     with open(storage_name + '/' + file_name, 'rb') as f:
         file_size = os.fstat(f.fileno()).st_size
-        print('filesize %d' % file_size)
         sock.recv(1)
         sock.send(str.encode(str(file_size), 'utf-8'))
         l = f.read(chunk_size)
