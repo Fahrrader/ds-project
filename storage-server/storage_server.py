@@ -112,7 +112,7 @@ class ClientListener(Thread):
         elif command == 'd':
             delete(args[0])
 
-        # self._close()
+        self._close()
 
 
 class Heart(Thread):

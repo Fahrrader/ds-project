@@ -70,7 +70,7 @@ def finally_delete_dir(user, path):
     if deleted is None:
         return '2'
     for d in deleted.findall('.//f'):
-        delete_file(d, node)
+        delete_file(None, None, d, node)
     node.remove(deleted)
     tree.write(root_filename)
     return '1'
@@ -250,7 +250,7 @@ def read_file(user, path):
     file_id = file.get('id')
     bank = get_bank_in_possession(file.text)
     print(bank)
-    if not bank:
+    if not bank and datetime.datetime.strptime(file.get('modified'), '%Y-%m-%d %H:%M:%S.%f') + datetime.timedelta(seconds=heart_stop_time * 2) < datetime.datetime.now():
         print('No one has this file. Delete.')
         delete_file(user, path)
         return '2'
@@ -354,6 +354,13 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
     file = root.find('.//*[@id="%s"]' % file_id)
     if file is None:
         return
+
+    file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)
+    file.set('modified', str(datetime.datetime.now()))
+    file.set('size', file_size)
+    file.set('op', '0')
+    tree.write(root_filename)
+
     bank_indices = file.text.strip().split(',') if file.text is not None else []
     if not bank_indices:
         bank_ips = get_banks_for_possession([bank_id])
@@ -368,13 +375,6 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
             except socket.error:
                 print("The connection timed out.")
             sock.close()
-
-    file.set('modified', str(datetime.datetime.now()))
-    file.set('size', file_size)
-    print(file.text)
-    file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)
-    print('text ' + file.text)
-    tree.write(root_filename)
 
 
 class Heartbeat(Thread):
