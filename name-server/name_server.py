@@ -365,9 +365,10 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
     tree.write(root_filename)
 
     bank_indices = file.text.strip().split(',') if file.text is not None else []
-    if not bank_indices:
+    if len(bank_indices) < 2:
         bank_ips = get_banks_for_possession([bank_id])
         if bank_ips:
+            print("Decided to replicate to " + str(bank_ips))
             sock = socket.socket()
             sock.settimeout(heart_stop_time * 2)
             try:

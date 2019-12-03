@@ -23,24 +23,23 @@ def confirm_write(file_name, file_size):
     next_heartbeat[0] = "\n".join(['r', file_name, file_size])
 
 
-def send_file(file_name, client_ip, sock):
+def send_file(file_name, client_ip, sock=None):
+    is_nested_sock = False
     if sock is None:
+        is_nested_sock = True
         sock = socket.socket()
         sock.connect((client_ip, guest_port))
-    res = '0'
-    try:
-        with open(storage_name + '/' + file_name, 'rb') as f:
-            file_size = os.fstat(f.fileno()).st_size
-            print('filesize %d' % file_size)
-            sock.send(str.encode(str(file_size), 'utf-8'))
+    with open(storage_name + '/' + file_name, 'rb') as f:
+        file_size = os.fstat(f.fileno()).st_size
+        print('filesize %d' % file_size)
+        sock.recv(1)
+        sock.send(str.encode(str(file_size), 'utf-8'))
+        l = f.read(chunk_size)
+        while l:
+            sock.send(l)
             l = f.read(chunk_size)
-            while l:
-                sock.send(l)
-                l = f.read(chunk_size)
-        res = '1'
-    except:
-        print("something went wrong with transmitting")
-    return res
+    if is_nested_sock:
+        sock.close()
 
 
 def write_file(file_name, file_size, sock):
@@ -50,9 +49,9 @@ def write_file(file_name, file_size, sock):
             data = sock.recv(chunk_size)
             if not data:
                 if int(file_size) == os.fstat(f.fileno()).st_size:
-                    return '1', file_size
+                    return file_size
                 else:
-                    return '0', file_size
+                    return file_size
             f.write(data)
 
 
@@ -102,7 +101,7 @@ class ClientListener(Thread):
         elif command == 'w':
             print('got write')
             print(args)
-            _, f_size = write_file(args[0], args[1], self.sock)
+            f_size = write_file(args[0], args[1], self.sock)
             print('gotta notify')
             confirm_write(args[0], f_size)
 
