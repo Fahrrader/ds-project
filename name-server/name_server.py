@@ -394,9 +394,8 @@ def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
         bank_id = choices(get_bank_indices(file))[0]
         bank_ip = banks[bank_id].addr
     else:
-        # file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)  # todo
         i = ET.SubElement(file, 'i')
-        i.text = str(file_id)
+        i.text = str(bank_id)
         file.set('modified', str(datetime.datetime.now()))
         file.set('size', file_size)
         file.set('op', '0')
