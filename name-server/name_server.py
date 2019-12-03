@@ -154,6 +154,7 @@ def get_banks_for_possession(banks_already):
     banks_r = [bank for bank in banks_r if bank not in banks_already]
     banks_r = banks_r[:min(replica_number(), banks_r.__len__())]
     banks_r = [banks[bank].addr for bank in banks_r]
+    print('next in line: ')
     print(banks_r)
     return banks_r
 
@@ -253,6 +254,7 @@ def read_file(user, path):
     file_id = file.get('id')
     bank = get_bank_in_possession(file.text)
     if not bank:
+        print('opa, no one has this file.')
         delete_file(user, path)
         return '2'
 

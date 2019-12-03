@@ -16,10 +16,11 @@ def init():
 
 
 def confirm_write(file_name, file_size):
-    sock = socket.socket()
+    """sock = socket.socket()
     sock.connect((name_server_ip, name_server_port))
     sock.sendall(str.encode("\n".join(['r', file_name, file_size])))
-    sock.close()
+    sock.close()"""
+    next_heartbeat[0] = "\n".join(['r', file_name, file_size])
 
 
 """def replicate(file_name, storage_list):
@@ -27,7 +28,10 @@ def confirm_write(file_name, file_size):
         send_update_to_storage(file_name, storage_info[0], storage_info[1])"""
 
 
-def send_file(file_name, sock):
+def send_file(file_name, client_ip, sock):
+    if sock is None:
+        sock = socket.socket()
+        sock.connect((client_ip, guest_port))
     res = '0'
     try:
         with open(storage_name + '/' + file_name, 'rb') as f:
@@ -98,7 +102,7 @@ class ClientListener(Thread):
             elif command == 'r':
                 print(args)
                 for ip in args[1:]:
-                    res = send_file(args[0], ip, self.sock)
+                    res = send_file(args[0], ip, self.sock if self.addr == ip else None)
                 """f = open(file_name)
                 data = f.read()
                 res = data"""
@@ -141,10 +145,10 @@ class Heart(Thread):
     def run(self):
         try:
             self.sock.connect((name_server_ip, name_server_port))
-            self.sock.send(str.encode('hello'))
             while True:
+                self.sock.send(str.encode(next_heartbeat[0]))
+                next_heartbeat[0] = '1'
                 sleep(self.heartbeat_time)
-                self.sock.send(str.encode("1"))
         except:
             self.is_alive = False
             socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, guest_port))
@@ -162,6 +166,7 @@ if __name__ == "__main__":
     storage_name = 'storage'
     chunk_size = 1024
 
+    next_heartbeat = ['hello']
     heart = Heart()
     heart.start()
 
