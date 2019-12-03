@@ -422,7 +422,7 @@ def delete_old_replicas(bank_id):
     elements = root.findall('.//*/f[i="%s"]' % bank_id)
     # elements = [x for n, x in enumerate(elements) if x not in elements[:n]]
     for e in elements:
-        e.remove(e.find('./i[text()="%s"]' % bank_id))
+        e.remove(e.find('./i="%s"' % bank_id))
         set_replica(e.get('id'))
     tree.write(root_filename)
 
