@@ -49,7 +49,7 @@ def send_file(file_name, client_ip, sock):
 
 def write_file(file_name, file_size, sock):
     with open(storage_name + '/' + file_name, 'wb') as f:
-        sock.send(b'')
+        sock.send(b'1')
         while True:
             data = sock.recv(chunk_size)
             print(data)
