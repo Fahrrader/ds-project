@@ -321,9 +321,9 @@ class ClientListener(Thread):
         self.name = name
         res = '0'
 
-        #if not banks.keys(): todo
-            #res = '0'
-        if command == 'init':
+        if not banks.keys():
+            res = '0'
+        elif command == 'init':
             res = init(name)
         elif command == 'c':
             res = create_file(name, args[2])
@@ -448,7 +448,7 @@ class BankHandler(Thread):
 # todo make a cleaner to check on bank expiry (get rid of old banks), replica number (adjust, send out afterwards)
 # todo delete files that don't have any more replicas
 if __name__ == "__main__":
-    host = ''
+    host = socket.gethostname()
     storage_port = 19609
     guest_port = 12607
     root_filename = 'root.xml'

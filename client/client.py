@@ -79,11 +79,14 @@ def send_storage(file_name, file_id, storage_ip):
         with open(storage_name + '/' + file_name, 'rb') as f:
             file_size = os.fstat(f.fileno()).st_size
 
+            print(storage_ip + str(port))
             sock.connect((storage_ip, port))
             sock.sendall(str.encode("\n".join(['w', file_id, str(file_size)])))
+            print('okay')
 
             l = f.read(chunk_size)
             while l:
+                print('process')
                 sock.send(l)
                 l = f.read(chunk_size)
         sock.close()

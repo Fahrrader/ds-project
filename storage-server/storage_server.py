@@ -82,8 +82,6 @@ class ClientListener(Thread):
         self.addr = addr
 
     def _close(self):
-        # users.remove(self.sock)
-        # self.sock.shutdown(how=socket.SHUT_RDWR)
         print(self.name + ' disconnected.')
         self.sock.close()
 
@@ -103,27 +101,15 @@ class ClientListener(Thread):
                 print(args)
                 for ip in args[1:]:
                     send_file(args[0], ip, self.sock if self.addr == ip else None)
-                """f = open(file_name)
-                data = f.read()
-                res = data"""
 
             elif command == 'w':
                 print('got write')
                 _, f_size = write_file(args[0], args[1], self.sock)
-                # initialize_replica(file_name)
-                # self.sock.sendall(str.encode("\n".join(res)))
                 print('gotta notify')
                 confirm_write(args[0], f_size)
 
             elif command == 'd':
                 delete(args[0])
-                # self.sock.sendall(str.encode("\n".join(res)))
-
-            """elif command == 'replicate':
-                file_name = args[0]
-                storage_info = args[1:]
-                replicate(file_name, storage_info)
-                res = 1"""
         except:
             self.sock.sendall(str.encode("\n".join(res)))
 
@@ -162,7 +148,7 @@ if __name__ == "__main__":
         name_server_ip = '172.31.16.189'  # TODO
     name_server_port = 19609
     guest_port = 12607
-    host = ''
+    host = socket.gethostname()
     storage_name = 'storage'
     chunk_size = 1024
 
