@@ -117,6 +117,9 @@ def recv_storage(file_name, file_id, storage_ip):
 
 
 if __name__ == "__main__":
+    banks = {1: 3, 2: 5}
+    import random
+    print(banks[random.choices(list(banks.keys()))[0]])
     user = "Unknown"
     while True:
         user = input("Welcome! State your username in order to access the file sharing system: ").strip()
@@ -126,7 +129,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         server_ip = sys.argv[1]
     else:
-        server_ip = 'localhost'  # TODO
+        server_ip = '50.19.187.186'  # TODO
     port = 12607
     sock_name_server = socket.socket()
     sock_storage = socket.socket()
@@ -155,8 +158,8 @@ if __name__ == "__main__":
             break
 
         elif c == 'init':
-            ack = send_recv_name_server([user, 'init'])
-            if ack == '1':
+            res = send_recv_name_server([user, 'init'])
+            if res == '1':
                 print("Initialized a new system.")
             else:
                 print("Error while initializing a new system.")
@@ -177,6 +180,7 @@ if __name__ == "__main__":
                 continue
             res = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
             if len(res) > 1:
+                print('my gosh!')
                 res = recv_storage(args[0], res[1], res[0])
             if res == '1':
                 webbrowser.open(storage_name + '/' + args[0])
@@ -190,6 +194,7 @@ if __name__ == "__main__":
                 continue
             res = send_recv_name_server([user, 'w', current_dir + '\\' + args[0]])
             if len(res) > 1:
+                print('rescue mission!')
                 res = send_storage(args[0], res[1], res[0])
             if res == '1':
                 print("The file has been successfully writen.")

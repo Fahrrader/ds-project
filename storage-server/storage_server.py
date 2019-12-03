@@ -90,21 +90,25 @@ class ClientListener(Thread):
         res = '0'
         try:
             if command == 'c':
+                print('got create')
                 res = create(args[0])
+                print('gotta notify')
                 confirm_write(args[0], '0')
 
             elif command == 'r':
                 print(args)
-                for _ in args[1:]:
-                    res = send_file(args[0], self.sock)
+                for ip in args[1:]:
+                    res = send_file(args[0], ip, self.sock)
                 """f = open(file_name)
                 data = f.read()
                 res = data"""
 
             elif command == 'w':
+                print('got write')
                 res, f_size = write_file(args[0], args[1], self.sock)
                 # initialize_replica(file_name)
                 self.sock.sendall(str.encode("\n".join(res)))
+                print('gotta notify')
                 confirm_write(args[0], f_size)
 
             elif command == 'd':

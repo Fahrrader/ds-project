@@ -136,6 +136,7 @@ def list_dir(user, path):
 
 def get_bank_in_possession(text, k=1):
     bank_indices = text.strip().split(',') if text is not None and text != '' else []
+    print(bank_indices)
     if not bank_indices:
         return []
     if k != 1:
@@ -183,6 +184,7 @@ def create_file(user, path):
         new_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
         elements = root.findall('.//*[@id="%s"]' % new_id)
 
+    print(banks.keys())
     bank = banks[choices(list(banks.keys()))[0]].addr
     sock = socket.socket()
     sock.settimeout(heart_stop_time * 2)
@@ -249,9 +251,7 @@ def read_file(user, path):
         return '2'
 
     file_id = file.get('id')
-    print(file_id)
     bank = get_bank_in_possession(file.text)
-    print(bank)
     if not bank:
         delete_file(user, path)
         return '2'
@@ -413,6 +413,7 @@ class Heartbeat(Thread):
                 elif message == 'hello':
                     print("%s says hello." % self.addr)
                 elif message == 'r':
+                    print('got notified with %s' % args[1])
                     set_replica(args[1], args[2], self.addr, self.id)
                 elif self.time_since_beat + heart_stop_time < time.time():
                     self._close()
