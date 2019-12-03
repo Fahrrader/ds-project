@@ -241,7 +241,7 @@ def write_file(user, path):
     print('written file.')
     tree.write(root_filename)
     banks_p = get_bank_in_possession(file.text, k=-1)
-    return [choices(get_banks_for_possession(banks_p))[0], file_id]
+    return [file_id, choices(get_banks_for_possession(banks_p))[0]]
 
 
 def read_file(user, path):
@@ -258,7 +258,7 @@ def read_file(user, path):
         delete_file(user, path)
         return '2'
 
-    return [bank, file_id]
+    return [file_id, bank]
 
 
 def delete_file(user, path, file=None, node=None):
@@ -268,6 +268,7 @@ def delete_file(user, path, file=None, node=None):
             return '0'
         if file is None:
             return '2'
+
     bank_indices = get_bank_in_possession(file.text, -1)
     for bank in bank_indices:
         sock = socket.socket()
@@ -320,7 +321,7 @@ class ClientListener(Thread):
         self.name = name
         res = '0'
 
-        #if not banks.keys():
+        #if not banks.keys(): todo
             #res = '0'
         if command == 'init':
             res = init(name)

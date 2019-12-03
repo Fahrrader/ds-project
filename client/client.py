@@ -117,9 +117,6 @@ def recv_storage(file_name, file_id, storage_ip):
 
 
 if __name__ == "__main__":
-    banks = {1: 3, 2: 5}
-    import random
-    print(banks[random.choices(list(banks.keys()))[0]])
     user = "Unknown"
     while True:
         user = input("Welcome! State your username in order to access the file sharing system: ").strip()
@@ -181,7 +178,7 @@ if __name__ == "__main__":
             res = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
             if len(res) > 1:
                 print('my gosh!')
-                res = recv_storage(args[0], res[1], res[0])
+                res = recv_storage(args[0], res[0], res[1])
             if res == '1':
                 webbrowser.open(storage_name + '/' + args[0])
             elif res == '2':
@@ -195,7 +192,7 @@ if __name__ == "__main__":
             res = send_recv_name_server([user, 'w', current_dir + '\\' + args[0]])
             if len(res) > 1:
                 print('rescue mission!')
-                res = send_storage(args[0], res[1], res[0])
+                res = send_storage(args[0], res[0], res[1])
             if res == '1':
                 print("The file has been successfully writen.")
             else:
