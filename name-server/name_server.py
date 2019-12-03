@@ -331,7 +331,7 @@ def get_file_info(user, path):
         return '0'
     if file is None:
         return '2'
-    return [file.attrib['size'], file.attrib['created'], file.attrib['modified'], file.text]
+    return [file.attrib['size'], file.attrib['created'], file.attrib['modified'], str(get_bank_indices(file))]
 
 
 class ClientListener(Thread):
@@ -420,7 +420,8 @@ def set_replica(file_id, file_size=None, bank_ip=None, bank_id=None):
 
 
 def delete_old_replicas(bank_id):
-    elements = root.findall('.//*[i="%s"]' % bank_id)
+    elements = root.findall('.//*/f[i="%s"]' % bank_id)
+    print(elements)
 
 
 class Heartbeat(Thread):
@@ -437,6 +438,7 @@ class Heartbeat(Thread):
         # self.sock.shutdown(how=socket.SHUT_RDWR)
         if self._is_alive:
             self._is_alive = False
+            delete_old_replicas(self.id)
             # TODO find all where text contains id -- and it is surrounded with , or is first or second element
             # go through them, strip, launch other replicas if necessary
             del banks[self.id]
