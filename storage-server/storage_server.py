@@ -95,8 +95,11 @@ class ClientListener(Thread):
 
         elif command == 'r':
             print(args)
-            for ip in args[1:]:
-                send_file(args[0], ip, self.sock if self.addr == ip else None)
+            if args.__len__() > 1:
+                for ip in args[1:]:
+                    send_file(args[0], ip, self.sock if self.addr == ip else None)
+            else:
+                send_file(args[0], self.addr, self.sock)
 
         elif command == 'w':
             print('got write')
