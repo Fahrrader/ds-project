@@ -96,7 +96,8 @@ def recv_storage(file_name, file_id, storage_ip):
     try:
         sock.connect((storage_ip, port))
         sock.send(str.encode("\n".join(['r', file_id])))
-        file_size = int(sock.recv(1024).decode('utf-8'))
+        args = sock.recv(2048).decode('utf-8').split('\n')
+        file_size = int(args[2])
         sock.send(b'1')
         with open(storage_name + '/' + file_name, 'wb') as f:
             while True:

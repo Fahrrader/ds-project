@@ -29,9 +29,11 @@ def send_file(file_name, client_ip, sock=None):
         is_nested_sock = True
         sock = socket.socket()
         sock.connect((client_ip, guest_port))
+
     with open(storage_name + '/' + file_name, 'rb') as f:
         file_size = os.fstat(f.fileno()).st_size
-        sock.send(str.encode(str(file_size), 'utf-8'))
+        sock.send(str.encode("\n".join(['w', file_name, str(file_size)])))
+        # sock.send(str.encode(str(file_size), 'utf-8'))
         sock.recv(1)
         l = f.read(chunk_size)
         while l:

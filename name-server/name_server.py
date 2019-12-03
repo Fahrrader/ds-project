@@ -95,7 +95,6 @@ def move_file(user, path, path2):
 
 
 def copy_file(user, path, path2):
-    # cut_path, dir_begins_at = get_last_node_split(path)
     file, node1 = get_file(user, path)
     if node1 is None:
         return '0'
@@ -107,12 +106,24 @@ def copy_file(user, path, path2):
         return '3'
     if file2 is not None:
         return '4'
-    # node2.append(file)
-    # tree.write(root_filename)
-    _, file = get_last_node_split(path)
-    res = write_file(user, path2 + "\\" + file)  # TODO check for problems later, adjust registry
-    print(res)
-    return res
+    _, file_path = get_last_node_split(path)
+    res = write_file(user, path2 + "\\" + file_path)
+    if len(res) > 1:
+        return res
+    sock = socket.socket()
+    sock.settimeout(heart_stop_time * 2)
+    try:
+        sock.connect((get_bank_in_possession(file.text), guest_port))
+        sock.sendall(str.encode("\n".join(['r', res[0], res[1]])))
+        ack = '1'
+    except ConnectionRefusedError:
+        print("The service is currently unavailable.")
+        ack = '0'
+    except socket.error:
+        print("The connection timed out.")
+        ack = '0'
+    sock.close()
+    return ack
 
 
 def check_for_dir(user, path):
