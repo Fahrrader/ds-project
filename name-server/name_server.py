@@ -111,8 +111,8 @@ def copy_file(user, path, path2):
     # tree.write(root_filename)
     _, file = get_last_node_split(path)
     res = write_file(user, path2 + "\\" + file)  # TODO check for problems later, adjust registry
-    if res == '0':
-        return res
+    print(res)
+    return res
 
 
 def check_for_dir(user, path):
@@ -140,8 +140,7 @@ def get_bank_in_possession(text, k=1):
         return bank_indices
     bank = choices(bank_indices)[0]
     while not (bank in banks):
-        print('lots of banks?')
-        print(bank)
+        print('lots of banks? ' + str(bank))
         bank = choices(bank_indices)[0]
     return bank
 
@@ -149,14 +148,9 @@ def get_bank_in_possession(text, k=1):
 def get_banks_for_possession(banks_already):
     banks_r = list(banks.keys())
     shuffle(banks_r)
-    print('BANKS R')
     banks_r = [bank for bank in banks_r if bank not in banks_already]
-    print(banks_r.__len__())
     banks_r = banks_r[:min(replica_number(), banks_r.__len__())]
-    print(banks_r.__len__())
     banks_r = [banks[bank].addr for bank in banks_r]
-    print('next in line: ')
-    print(banks_r)
     return banks_r
 
 
@@ -299,8 +293,7 @@ def get_file_info(user, path):
         return '0'
     if file is None:
         return '2'
-    print(file.text)
-    return [file.attrib['size'], file.attrib['created'], file.attrib['modified']]
+    return [file.attrib['size'], file.attrib['created'], file.attrib['modified'], file.text]
 
 
 class ClientListener(Thread):

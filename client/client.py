@@ -222,6 +222,7 @@ if __name__ == "__main__":
                 print('size: %s bytes' % res[0])
                 print('created: %s' % res[1])
                 print('modified: %s' % res[2])
+                print('replicas contained on nodes ' + res[3] + ' just so you know.')
 
         elif c == 'cp':
             if error_arg_len(expected_len=2) or error_forbidden_symbols(args[1]):

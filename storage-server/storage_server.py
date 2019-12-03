@@ -31,8 +31,8 @@ def send_file(file_name, client_ip, sock=None):
         sock.connect((client_ip, guest_port))
     with open(storage_name + '/' + file_name, 'rb') as f:
         file_size = os.fstat(f.fileno()).st_size
-        sock.recv(1)
         sock.send(str.encode(str(file_size), 'utf-8'))
+        sock.recv(1)
         l = f.read(chunk_size)
         while l:
             sock.send(l)
@@ -92,7 +92,6 @@ class ClientListener(Thread):
             confirm_write(args[0], '0')
 
         elif command == 'r':
-            print('CALM@')
             print(args)
             for ip in args[1:]:
                 send_file(args[0], ip, self.sock if self.addr == ip else None)
