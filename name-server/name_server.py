@@ -111,25 +111,35 @@ def copy_file(user, path, path2):
     if file2 is not None:
         return '4'
 
-    res = write_file(user, path2 + "\\" + file_path)
-    if len(res) > 1:
-        return res
+    elements = ['']
+    while elements:
+        new_id = ''.join(choices(string.ascii_letters + string.digits, k=64))
+        elements = root.findall('.//*[@id="%s"]' % new_id)
 
+    cut_path, file_name = get_last_node_split(path)
+    file = ET.SubElement(node2, 'f', attrib={
+        'id': new_id,
+        'name': file_name,
+        'size': '0',
+        'created': str(datetime.datetime.now()),
+        'modified': str(datetime.datetime.now())
+    })
+
+    bank = banks[choices(list(banks.keys()))[0]].addr
     sock = socket.socket()
     sock.settimeout(heart_stop_time * 2)
     try:
-        sock.connect((get_bank_in_possession(file.text), guest_port))
-        sock.sendall(str.encode("\n".join(['r', res[0], old_id, res[1]])))
-        ack = '1'
+        sock.connect((bank, guest_port))
+        sock.sendall(str.encode("\n".join(['r', new_id, old_id, bank])))
+        sock.close()
     except ConnectionRefusedError:
         print("The service is currently unavailable.")
-        ack = '0'
+        sock.close()
+        return '0'
     except socket.error:
-        print("The connection timed out.")
-        ack = '0'
-
-    sock.close()
-    return ack
+        print("The connection took too long and timed out.")
+        sock.close()
+        return '0'
 
 
 def check_for_dir(user, path):
