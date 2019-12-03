@@ -82,12 +82,14 @@ def move_file(user, path, path2):
         return '0'
     if file is None:
         return '2'
+
     _, file_path = get_last_node_split(path)
     file2, node2 = get_file(user, path2 + "\\" + file_path)
     if node2 is None:
         return '3'
     if file2 is not None:
         return '4'
+
     node2.append(file)
     node1.remove(file)
     tree.write(root_filename)
@@ -100,21 +102,24 @@ def copy_file(user, path, path2):
         return '0'
     if file is None:
         return '2'
+    old_id = file.get('id')
+
     _, file_path = get_last_node_split(path)
     file2, node2 = get_file(user, path2 + "\\" + file_path)
     if node2 is None:
         return '3'
     if file2 is not None:
         return '4'
-    _, file_path = get_last_node_split(path)
+
     res = write_file(user, path2 + "\\" + file_path)
     if len(res) > 1:
         return res
+
     sock = socket.socket()
     sock.settimeout(heart_stop_time * 2)
     try:
         sock.connect((get_bank_in_possession(file.text), guest_port))
-        sock.sendall(str.encode("\n".join(['r', res[0], res[1]])))
+        sock.sendall(str.encode("\n".join(['r', res[0], old_id, res[1]])))
         ack = '1'
     except ConnectionRefusedError:
         print("The service is currently unavailable.")
@@ -122,6 +127,7 @@ def copy_file(user, path, path2):
     except socket.error:
         print("The connection timed out.")
         ack = '0'
+
     sock.close()
     return ack
 
@@ -149,10 +155,12 @@ def get_bank_in_possession(text, k=1):
         return []
     if k != 1:
         return bank_indices
+
     bank = choices(bank_indices)[0]
     while not (bank in banks):
         print('lots of banks? ' + str(bank))
         bank = choices(bank_indices)[0]
+
     return bank
 
 
@@ -166,7 +174,7 @@ def get_banks_for_possession(banks_already):
 
 
 def replica_number():
-    return min(max(int(len(banks) / 3), 2) - 1, len(banks))
+    return min(max(int(len(banks) / 3), 3), len(banks)) - 1
 
 
 def init(user):
@@ -259,7 +267,7 @@ def read_file(user, path):
     file_id = file.get('id')
     bank = get_bank_in_possession(file.text)
     is_bank_okay = bank or bank == 0
-    if not is_bank_okay and datetime.datetime.strptime(file.get('modified'), '%Y-%m-%d %H:%M:%S.%f') + datetime.timedelta(seconds=heart_stop_time * 2) < datetime.datetime.now():
+    if not is_bank_okay and datetime.datetime.strptime(file.get('modified'), '%Y-%m-%d %H:%M:%S.%f') + datetime.timedelta(hours=heart_stop_time) < datetime.datetime.now():
         print('No one has this file. Delete.')
         delete_file(user, path)
         return '2'
@@ -378,7 +386,7 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
             sock.settimeout(heart_stop_time * 2)
             try:
                 sock.connect((bank_ip, guest_port))
-                sock.sendall(str.encode("\n".join(['r', file_id] + bank_ips)))
+                sock.sendall(str.encode("\n".join(['r', file_id, ''] + bank_ips)))
             except ConnectionRefusedError:
                 print("The service is currently unavailable.")
             except socket.error:

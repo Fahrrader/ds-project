@@ -97,19 +97,21 @@ def recv_storage(file_name, file_id, storage_ip):
         sock.connect((storage_ip, port))
         sock.send(str.encode("\n".join(['r', file_id])))
         args = sock.recv(2048).decode('utf-8').split('\n')
-        print(args)
         file_size = int(args[2])
-        sock.send(b'1')
         with open(storage_name + '/' + file_name, 'wb') as f:
+            sock.send(b'1')
             while True:
                 data = sock.recv(chunk_size)
                 if not data:
                     sock.close()
-                    if file_size == os.fstat(f.fileno()).st_size:
-                        return '1'
-                    else:
-                        return '0'
+                    break
                 f.write(data)
+
+        with open(storage_name + '/' + file_name, 'rb') as f:
+            if file_size == os.fstat(f.fileno()).st_size:
+                return '1'
+            else:
+                return '0'
     except socket.error:
         print("The connection has taken too long and timed out.")
         return '0'
@@ -180,7 +182,7 @@ if __name__ == "__main__":
         elif c == 'r':
             if error_arg_len(expected_len=1):
                 continue
-            res = send_recv_name_server([user, 'r', current_dir + '\\' + args[0]])
+            res = send_recv_name_server([user, 'r', current_dir + '\\' + args[0], ''])
             if len(res) > 1:
                 res = recv_storage(args[0], res[0], res[1])
             if res == '1':
