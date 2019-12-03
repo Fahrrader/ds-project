@@ -52,7 +52,6 @@ def write_file(file_name, file_size, sock):
         sock.send(b'1')
         while True:
             data = sock.recv(chunk_size)
-            print(data)
             if not data:
                 if int(file_size) == os.fstat(f.fileno()).st_size:
                     return '1', file_size

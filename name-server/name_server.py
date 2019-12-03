@@ -249,6 +249,7 @@ def read_file(user, path):
 
     file_id = file.get('id')
     bank = get_bank_in_possession(file.text)
+    print(bank)
     if not bank:
         print('No one has this file. Delete.')
         delete_file(user, path)
@@ -271,7 +272,7 @@ def delete_file(user, path, file=None, node=None):
         sock.settimeout(heart_stop_time * 2)
         try:
             sock.connect((banks[bank].addr, guest_port))
-            sock.sendall(str.encode("\n".join(['d', bank])))
+            sock.send(str.encode("\n".join(['d', file.get('id')])))
             sock.close()
         except ConnectionRefusedError:
             print("The service is currently unavailable.")
@@ -294,6 +295,7 @@ def get_file_info(user, path):
         return '0'
     if file is None:
         return '2'
+    print(file.text)
     return [file.attrib['size'], file.attrib['created'], file.attrib['modified']]
 
 
@@ -370,6 +372,7 @@ def set_replica(file_id, file_size, bank_ip, bank_id):
     file.set('modified', str(datetime.datetime.now()))
     file.set('size', file_size)
     file.text = (file.text if file.text is not None else '') + (',' if file.text is not None else '') + str(bank_id)
+    print(file.text)
     tree.write(root_filename)
 
 
